@@ -71,7 +71,6 @@ export default defineConfig(async (merge, { command, mode }) => {
               plugin: UnifiedWebpackPluginV5,
               args: [{
                 appType: 'taro',
-                // 下面个配置，会开启 rem -> rpx 的转化
                 rem2rpx: true
               }]
             }
@@ -108,7 +107,20 @@ export default defineConfig(async (merge, { command, mode }) => {
       devServer: {
         hot:false,
       },
-      esnextModules: ['@nutui/nutui-react-taro']
+      esnextModules: ['@nutui/nutui-react-taro'],
+      webpackChain(chain) {
+        chain.merge({
+          plugin: {
+            install: {
+              plugin: UnifiedWebpackPluginV5,
+              args: [{
+                appType: 'taro',
+                rem2rpx: true
+              }]
+            }
+          }
+        })
+      }
     },
     rn: {
       appName: 'taroDemo',
