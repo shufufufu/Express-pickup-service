@@ -14,5 +14,25 @@ module.exports = {
     '@babel/plugin-transform-runtime',
     'babel-plugin-dynamic-import-node',
     //'react-refresh/babel' // 只在使用 React 时生效
+    [
+      "import",
+      {
+        libraryName: "@taroify/core",
+        libraryDirectory: "",
+        style: true,
+      },
+      "@taroify/core",
+    ],
+    [
+      "import",
+      {
+        libraryName: "@taroify/icons",
+        libraryDirectory: "",
+        camel2DashComponentName: false,
+        style: () => "@taroify/icons/style",
+        customName: (name) => name === "Icon" ? "@taroify/icons/van/VanIcon" : `@taroify/icons/${name}`,
+      },
+      "@taroify/icons",
+    ],
   ]
 };

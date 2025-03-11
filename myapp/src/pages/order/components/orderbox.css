@@ -1,0 +1,18 @@
+.custom-color {
+  --steps-active-color: #07c160;
+  --steps-inactive-color: #ddd;
+  --steps-active-icon-color: #07c160;
+  --steps-inactive-icon-color: #ddd;
+  --steps-finish-line-color: #07c160;
+  --steps-finish-text-color: #07c160;
+  background-color: transparent !important;
+}
+.custom-color .taroify-steps__step {
+  background-color: transparent !important;
+}
+.custom-color .taroify-steps__step-icon {
+  font-size: 16px;
+}
+.custom-color .taroify-steps__step-title {
+  font-size: 12px;
+}

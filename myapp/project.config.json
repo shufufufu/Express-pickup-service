@@ -1,8 +1,6 @@
 {
   "miniprogramRoot": "dist/",
-  "projectname": "myapp",
   "description": "myapp",
-  "appid": "wx6de90e72e936018f",
   "setting": {
     "urlCheck": true,
     "es6": false,
@@ -14,18 +12,23 @@
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    }
+    },
+    "coverView": false,
+    "showShadowRootInWxmlPanel": false,
+    "packNpmRelationList": [],
+    "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
-  "libVersion": "3.7.9",
   "srcMiniprogramRoot": "dist/",
-  "packOptions": {
-    "ignore": [],
-    "include": []
-  },
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "libVersion": "3.7.9",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "appid": "wx6de90e72e936018f"
 }

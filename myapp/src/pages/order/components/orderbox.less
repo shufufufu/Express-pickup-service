@@ -1,0 +1,23 @@
+.custom-color {
+  --steps-active-color: #07c160;
+  --steps-inactive-color: #ddd;
+  --steps-active-icon-color: #07c160;
+  --steps-inactive-icon-color: #ddd;
+  --steps-finish-line-color: #07c160;
+  --steps-finish-text-color: #07c160;
+  
+  // 确保步骤条背景透明
+  background-color: transparent !important;
+  
+  .taroify-steps__step {
+    background-color: transparent !important;
+    
+    &-icon {
+      font-size: 16px;
+    }
+    
+    &-title {
+      font-size: 12px;
+    }
+  }
+} 

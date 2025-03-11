@@ -71,7 +71,8 @@ export default defineConfig(async (merge, { command, mode }) => {
               plugin: UnifiedWebpackPluginV5,
               args: [{
                 appType: 'taro',
-                rem2rpx: true
+                rem2rpx: true,
+                injectAdditionalCssVarScope: true
               }]
             }
           }
