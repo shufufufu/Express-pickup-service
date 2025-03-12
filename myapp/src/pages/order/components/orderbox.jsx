@@ -1,91 +1,92 @@
 import { View } from "@tarojs/components";
 import React, { useState } from "react";
+import Steps, { STEP_STATES } from "./Steps";
+import { Countdown } from "@taroify/core";
 
 // 渐变背景样式
 const gradientStyle = {
-  background: "linear-gradient(to right, #06b6d4, #3b82f6)"  // cyan-500 to blue-500
+  background: "linear-gradient(to right, #d4eaf7, #b6ccd8)"  // cyan-500 to blue-500
 };
 
-const OrderBox = ({ customIcons = null }) => {
-  const [currentStep, setCurrentStep] = useState(1);
+// 状态序列用于测试
+const testStatusSequence = [
+  STEP_STATES.STEP1.WAITING,   // 待接单
+  STEP_STATES.STEP1.ACCEPTED,  // 已接单
+  STEP_STATES.STEP2.PICKING,   // 正在取件
+  STEP_STATES.STEP2.SUCCESS,   // 取件成功
+  STEP_STATES.STEP3.DELIVERING, // 配送中
+  STEP_STATES.STEP3.DELIVERED,  // 已送达
+  // 额外测试失败状态
+  STEP_STATES.STEP1.REJECTED,  // 未接单
+  STEP_STATES.STEP2.FAILED,    // 取件失败
+];
 
-  // 步骤的配置 - 修复状态逻辑
-  const steps = [
-    { title: "已接单", status: currentStep > 1 ? "finished" : currentStep === 1 ? "active" : "pending" },
-    { title: "配送中", status: currentStep > 2 ? "finished" : currentStep === 2 ? "active" : "pending" },
-    { title: "已送达", status: currentStep === 3 ? "active" : "pending" }
-  ];
-
-  // 处理步骤切换
-  const handleStepChange = () => {
-    setCurrentStep((prev) => (prev >= 3 ? 1 : prev + 1));
-  };
-
-  // 默认箭头图标
-  const DefaultArrowIcon = () => (
-    <View className="w-0 h-0 mt-1 border-t-[6px] border-b-[6px] border-l-[8px] border-transparent border-l-white" />
-  );
-
-  // 默认星星图标
-  const DefaultStarIcon = () => (
-    <View className="w-4 h-4 mt-1 relative">
-      <View className="w-4 h-4 rounded-full bg-white" />
-    </View>
-  );
-
-  // 获取图标
-  const getIcon = (index) => {
-    // 如果提供了自定义图标，使用自定义图标
-    if (customIcons && customIcons[index]) {
-      return customIcons[index];
+const OrderBox = ({ roomNumber = "106-5-207", address = "南湖五栋207" }) => {
+  // 使用本地状态存储当前状态的索引
+  const [statusIndex, setStatusIndex] = useState(0);
+  const currentStatus = testStatusSequence[statusIndex];
+  
+  // 获取当前状态的描述
+  const getStatusDesc = () => {
+    switch (currentStatus) {
+      case STEP_STATES.STEP1.WAITING: return "待接单";
+      case STEP_STATES.STEP1.ACCEPTED: return "已接单";
+      case STEP_STATES.STEP1.REJECTED: return "未接单";
+      case STEP_STATES.STEP2.PICKING: return "正在取件";
+      case STEP_STATES.STEP2.SUCCESS: return "取件成功";
+      case STEP_STATES.STEP2.FAILED: return "取件失败";
+      case STEP_STATES.STEP3.DELIVERING: return "配送中";
+      case STEP_STATES.STEP3.DELIVERED: return "已送达";
+      default: return "未知状态";
     }
-    // 否则使用默认图标
-    return index === 2 ? <DefaultStarIcon /> : <DefaultArrowIcon />;
+  };
+  
+  // 处理步骤切换
+  const handleCycleStatus = () => {
+    setStatusIndex(prev => (prev + 1) % testStatusSequence.length);
   };
 
   return (
     <View 
-      className="mx-3 my-3 p-4 rounded-lg shadow-lg" 
+      className="mx-3 my-3 p-4 rounded-lg shadow-lg text-[#3b3c3d]" 
       style={gradientStyle}
     >
       <View className="flex justify-between items-center">
-        <View className="text-2xl font-medium text-white">106-5-207</View>
+        <View className="text-2xl font-medium text-[#3b3c3d]">{roomNumber}</View>
         <View 
-          className="px-3 py-1 bg-white/20 rounded-full text-white text-sm cursor-pointer active:bg-white/30"
-          onClick={handleStepChange}
+          className="px-3 py-1 bg-white/20 rounded-full text-[#3b3c3d] text-sm cursor-pointer active:bg-white/30"
+          onClick={handleCycleStatus}
         >
-          测试步骤 {currentStep}/3
+          测试: {getStatusDesc()}
         </View>
       </View>
-      <View className="mt-2 text-blue-50">南湖五栋207</View>
+      <View className="mt-2 text-[#3b3c3d]">{address}</View>
       
-      <View className="mt-6">
-        <View className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <React.Fragment key={index}>
-              {/* 步骤和标题的容器 */}
-              <View className="flex flex-col items-center flex-none">
-                {/* 图标容器 */}
-                <View className={`transform scale-125 ${step.status === "pending" ? "opacity-50" : "opacity-100"}`}>
-                  {getIcon(index)}
-                </View>
-                {/* 标题文本 */}
-                <View className={`mt-2 text-xs ${
-                  step.status === "pending" ? "text-white/70" : "text-white font-medium"
-                }`}>
-                  {step.title}
-                </View>
+      {/* 倒计时组件 */}
+      <View className="flex items-center mt-3">
+        <View className="text-[#3b3c3d] text-sm mr-2">剩余时间</View>
+        <Countdown value={30 * 60 * 60 * 1000}>
+          {(current) => (
+            <View className="flex items-center">
+              <View className="inline-block w-[44px] h-[24px] leading-[24px] bg-sky-100 text-blue-700 text-center text-sm rounded-lg">
+                {current.hours.toString().padStart(2, '0')}
               </View>
-              
-              {/* 连接线 */}
-              {index < steps.length - 1 && (
-                <View className={`flex-1 h-[2px] mx-1 ${
-                  steps[index + 1].status === "pending" ? "bg-white/50" : "bg-white"
-                }`} />
-              )}
-            </React.Fragment>
-          ))}
-        </View>
+              <View className="inline-block mx-2 text-blue-700 text-sm">:</View>
+              <View className="inline-block w-[44px] h-[24px] leading-[24px] bg-sky-100 text-blue-700 text-center text-sm rounded-lg">
+                {current.minutes.toString().padStart(2, '0')}
+              </View>
+              <View className="inline-block mx-2 text-blue-700 text-sm">:</View>
+              <View className="inline-block w-[44px] h-[24px] leading-[24px] bg-sky-100 text-blue-700 text-center text-sm rounded-lg">
+                {current.seconds.toString().padStart(2, '0')}
+              </View>
+            </View>
+          )}
+        </Countdown>
+      </View>
+      
+      {/* 使用封装好的 Steps 组件，传递当前状态 */}
+      <View className="pb-0 mb-0">
+        <Steps status={currentStatus} />
       </View>
     </View>
   );
