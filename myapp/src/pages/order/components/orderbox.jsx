@@ -2,6 +2,7 @@ import { View } from "@tarojs/components";
 import React, { useState } from "react";
 import Steps, { STEP_STATES } from "./Steps";
 import { Countdown } from "@taroify/core";
+import Taro from "@tarojs/taro";
 
 // 渐变背景样式
 const gradientStyle = {
@@ -51,14 +52,28 @@ const OrderBox = (props) => {
   };
 
   // 处理步骤切换
-  const handleCycleStatus = () => {
+  const handleCycleStatus = (e) => {
+    // 阻止事件冒泡，避免触发卡片点击
+    e.stopPropagation();
     setStatusIndex((prev) => (prev + 1) % testStatusSequence.length);
+  };
+  
+  // 处理卡片点击，跳转到订单详情
+  const navigateToOrderDetail = () => {
+    // 准备要传递的参数
+    const { expressid, dromadd, downtime } = props.data;
+    
+    // 导航到订单详情页面
+    Taro.navigateTo({
+      url: `/pages/orderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&stepstate=${statusIndex}&downtime=${downtime}`
+    });
   };
 
   return (
     <View
       className="mx-3 my-3 p-4 rounded-lg shadow-lg text-[#3b3c3d]"
       style={gradientStyle}
+      onClick={navigateToOrderDetail}
     >
       <View className="flex justify-between items-center">
         <View className="text-2xl font-medium text-[#3b3c3d]">

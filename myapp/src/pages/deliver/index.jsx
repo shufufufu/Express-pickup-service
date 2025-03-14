@@ -29,7 +29,7 @@ const Deliver = () => {
     setCurrentTime(`${year}-${month}-${day} ${hours}:${minutes}`);
   };
 
-  // 表单提交处理
+  // 表单提交处理（图片单独上传，其他数据以 JSON 提交）
   const onSubmit = (event) => {
     const formData = event.detail.value;
     
@@ -40,16 +40,45 @@ const Deliver = () => {
       return;
     }
     
-    // 如果有图片，添加到表单数据
-    if (files.length > 0) {
-      // 实际应用中，这里可以使用 Taro.uploadFile 上传文件到服务器
-      formData.imageFile = files[0];
-    }
+    // 先单独上传图片（不处理返回的 imageUrl，由后端自行关联）
+    Taro.uploadFile({
+      url: "https://your-image-upload.com/upload", // 替换为你的图片上传接口地址
+      filePath: files[0].url,           // 小程序本地临时文件路径
+      name: "Image",                    // 后端接收图片的字段名
+      // 图片上传成功与否不影响表单数据的提交
+      success: (uploadRes) => {
+        console.log("图片上传成功:", uploadRes);
+      },
+      fail: (uploadErr) => {
+        console.error("图片上传失败:", uploadErr);
+        Taro.showToast({
+          title: "图片上传失败:" + uploadErr.errMsg,
+          icon: "none"
+        });
+      }
+    });
     
-    // 显示表单数据（开发测试用）
-    setToastMessage(JSON.stringify(formData));
-    setShowToast(true);
+    // 再提交其他表单数据（JSON 格式，不包含图片信息）
+    Taro.request({
+      url: "https://example.com/submit", // 替换为你的表单数据提交接口地址
+      method: "POST",
+      header: {
+        "Content-Type": "application/json"
+      },
+      data: formData,
+      success: (res) => {
+        console.log("表单提交成功:", res.data);
+        setToastMessage("提交成功：" + res.data);
+        setShowToast(true);
+      },
+      fail: (err) => {
+        console.error("表单提交失败:", err);
+        setToastMessage("提交失败：" + err.errMsg);
+        setShowToast(true);
+      }
+    });
     
+    // 隔一段时间自动关闭 Toast
     setTimeout(() => {
       setShowToast(false);
     }, 3000);
@@ -155,8 +184,8 @@ const Deliver = () => {
             <Input placeholder="电话号码" />
           </Field>
           
-          {/* 使用Taroify的Uploader组件 */}
-          <Field label="快递取件截图(菜鸟驿站等)" name="uploader" rules={[{ required: true}]}>
+          {/* 使用 Taroify 的 Uploader 组件 */}
+          <Field label="快递取件截图(菜鸟驿站等)" name="uploader" rules={[{ required: true }]}>
             <Uploader
               value={files}
               maxFiles={1}
@@ -182,7 +211,7 @@ const Deliver = () => {
               color: "#666666"
             }}
             onClick={confirmReset}
-          >
+          > 
             重置
           </Button>
           <Button 
