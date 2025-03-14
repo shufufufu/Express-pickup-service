@@ -1,6 +1,15 @@
 import { View, Image } from "@tarojs/components";
 import React from "react";
 import waitpickIcon from "../../../assets/waitpick.png";
+import PickIcon from "../../../assets/pick1.png";
+import SendIcon from "../../../assets/pickup.png";
+import PickedIcon from "../../../assets/picked2.png";
+import UnSendIcon from "../../../assets/send2.png";
+import SendingIcon from "../../../assets/send1.png";
+import FinishIcon from "../../../assets/finish2.png";
+import RejectIcon from "../../../assets/reject.png";
+import UnPickIcon from "../../../assets/unpick.png";
+
 
 // 步骤和状态的常量定义
 const STEP_STATES = {
@@ -76,11 +85,53 @@ const Steps = ({ status = STEP_STATES.STEP1.WAITING }) => {
     }
   };
 
+  // 获取步骤图标
+  const getStepIcon = (stepNum, stepStatus) => {
+    // 根据步骤号和状态返回对应的图标
+    // 暂时所有状态都用 waitpickIcon 替代，后期可以替换为实际图标
+    
+    // 第一步图标
+    if (stepNum === 1) {
+      if (stepStatus === "pending") return waitpickIcon; // 待接单图标
+      if (stepStatus === "error") return RejectIcon;   // 未接单图标
+      return PickIcon;                               // 已接单图标
+    }
+    
+    // 第二步图标
+    if (stepNum === 2) {
+      if (stepStatus === "pending") return SendIcon; // 未开始取件图标
+      if (stepStatus === "active") return SendIcon;  // 正在取件图标
+      if (stepStatus === "error") return UnPickIcon;   // 取件失败图标
+      return PickedIcon;                               // 取件成功图标
+    }
+    
+    // 第三步图标
+    if (stepNum === 3) {
+      if (stepStatus === "pending") return UnSendIcon; // 未开始配送图标
+      if (stepStatus === "active") return SendingIcon;  // 配送中图标
+      return FinishIcon;                               // 已送达图标
+    }
+    
+    return waitpickIcon; // 默认图标
+  };
+
   // 步骤的配置
   const steps = [
-    { title: getStepTitle(1), status: getStep1Status() },
-    { title: getStepTitle(2), status: getStep2Status() },
-    { title: getStepTitle(3), status: getStep3Status() }
+    { 
+      title: getStepTitle(1), 
+      status: getStep1Status(),
+      icon: getStepIcon(1, getStep1Status()) 
+    },
+    { 
+      title: getStepTitle(2), 
+      status: getStep2Status(),
+      icon: getStepIcon(2, getStep2Status()) 
+    },
+    { 
+      title: getStepTitle(3), 
+      status: getStep3Status(),
+      icon: getStepIcon(3, getStep3Status()) 
+    }
   ];
 
   return(
@@ -97,7 +148,7 @@ const Steps = ({ status = STEP_STATES.STEP1.WAITING }) => {
                 "opacity-100"
               }`}>
                 <Image 
-                  src={waitpickIcon}
+                  src={step.icon}
                   className={`w-6 h-6 ${step.status === "error" ? "border border-red-500 rounded-full" : ""}`}
                   mode="aspectFit" 
                 />
@@ -105,7 +156,7 @@ const Steps = ({ status = STEP_STATES.STEP1.WAITING }) => {
               {/* 标题文本 */}
               <View className={`mt-2 text-xs ${
                 step.status === "pending" ? "text-white/70" : 
-                step.status === "error" ? "text-red-300 font-medium" :
+                step.status === "error" ? "text-red-400 font-medium" :
                 "text-white font-medium"
               }`}>
                 {step.title}
@@ -116,7 +167,7 @@ const Steps = ({ status = STEP_STATES.STEP1.WAITING }) => {
             {index < steps.length - 1 && (
               <View className={`flex-1 h-[2px] mx-1 ${
                 steps[index + 1].status === "pending" ? "bg-white/50" : 
-                steps[index + 1].status === "error" ? "bg-red-300" :
+                steps[index + 1].status === "error" ? "bg-red-400" :
                 "bg-white"
               }`} />
             )}

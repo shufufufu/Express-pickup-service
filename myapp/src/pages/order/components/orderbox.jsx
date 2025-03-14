@@ -5,7 +5,7 @@ import { Countdown } from "@taroify/core";
 
 // 渐变背景样式
 const gradientStyle = {
-  background: "linear-gradient(to right, #d4eaf7, #b6ccd8)", // cyan-500 to blue-500
+  background: "linear-gradient(to right, #d4eaf7, #b6ccd8)", 
 };
 
 // 状态序列用于测试

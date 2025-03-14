@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import OrderBox from "./components/orderbox";
 import { PullRefresh } from "@taroify/core";
 import { usePageScroll } from "@tarojs/taro";
+import { Empty } from "@taroify/core"
 
 // 模拟数据 - 实际项目中应该从API获取
 const initialData = [
@@ -99,7 +100,10 @@ export default function Order() {
         {/* 订单列表 */}
         <View className="pb-4">
           {orderData.length === 0 ? (
-            <View className="py-8 text-center text-gray-500">暂无订单</View>
+            <Empty>
+            <Empty.Image />
+            <Empty.Description>暂时没有快递</Empty.Description>
+          </Empty>
           ) : (
             orderData.map((item) => (
               <OrderBox

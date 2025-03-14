@@ -6,7 +6,7 @@ import { Arrow, Edit } from "@taroify/icons";
 
 // 模拟后端数据 (包含完整手机号)
 const mockUserInfo = {
-  nickname: "充电用户",
+  nickname: "束缚",
   age: 22,
   gender: "男",
   phone: "13312345950", // 完整手机号
@@ -66,7 +66,7 @@ export default function ChangeInfo() {
     <View className="bg-gray-100 min-h-screen">
       {/* 头像区域 */}
       <View className="flex justify-center items-center py-10 relative">
-        <Image src={userInfo.avatar} className="w-24 h-24 rounded-full" />
+        <Image src={userInfo.avatar} className="w-24 h-24 rounded-full" onClick={handleEditAvatar}/>
         <View 
           className="absolute bottom-10 right-[37%] bg-sky-300 text-white rounded-full w-6 h-6 flex items-center justify-center"
           onClick={handleEditAvatar}
@@ -80,7 +80,12 @@ export default function ChangeInfo() {
         {/* 昵称 */}
         <View className="flex justify-between items-center px-4 py-4 border-b border-gray-100">
           <Text className="text-gray-600">昵称</Text>
-          <Text>{userInfo.nickname}</Text>
+          <View className='flex items-center'>
+            <Text>
+              {userInfo.nickname}
+            </Text>
+          <Arrow className='ml-2'/>
+          </View>
         </View>
 
         {/* 年龄 */}
@@ -132,6 +137,9 @@ export default function ChangeInfo() {
             </View>
           </View>
         </View>
+      </View>
+      <View className='text-sm text-gray-300 mx-4 mt-4 mb-4'>
+        根据《个人信息保护法》，您的手机号仅用于快递代取服务，可随时修改或删除。
       </View>
     </View>
   );
