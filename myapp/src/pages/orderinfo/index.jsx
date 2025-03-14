@@ -198,16 +198,6 @@ const OrderInfo = () => {
 
   return (
     <ScrollView scrollY className="min-h-screen bg-gray-50">
-      {/* 顶部导航栏 */}
-      <View className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10">
-        <View className="w-8" onClick={handleBack}>
-          <Arrow className="transform rotate-180 text-gray-600" />
-        </View>
-        <Text className="text-lg font-medium">订单详情</Text>
-        <View className="w-8" onClick={copyOrderId}>
-          <BillOutlined className="text-gray-600" />
-        </View>
-      </View>
       
       {/* 状态卡片 */}
       <View className="mx-4 mt-4 rounded-xl overflow-hidden">

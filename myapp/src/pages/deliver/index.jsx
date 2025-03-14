@@ -183,6 +183,9 @@ const Deliver = () => {
           <Field label="电话号码" name="Phonenumber" rules={[{ required: true, message: "请填写电话号码" }]}>
             <Input placeholder="电话号码" />
           </Field>
+          <Field label="备注" name="comment" rules={[{ required: false, message: "请填写备注" }]}>
+            <Input placeholder="备注" />
+          </Field>
           
           {/* 使用 Taroify 的 Uploader 组件 */}
           <Field label="快递取件截图(菜鸟驿站等)" name="uploader" rules={[{ required: true }]}>

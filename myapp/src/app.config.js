@@ -6,6 +6,7 @@ export default defineAppConfig({
     'pages/changeinfo/index',
     'pages/feedback/index',
     'pages/orderinfo/index',
+    'pages/login/index',
 
   ],
   window: {
