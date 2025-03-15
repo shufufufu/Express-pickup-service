@@ -2,19 +2,31 @@ import React, { useState, useEffect, useRef } from "react";
 import { View } from "@tarojs/components";
 import { Form, Cell, Field, Input, Button, Toast, Uploader } from "@taroify/core";
 import Taro from "@tarojs/taro";
+import { checkLoginStatus } from '../../utils/auth';
+import LoginPopup from '../../components/LoginPopup';
 
 const Deliver = () => { 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [files, setFiles] = useState([]);
   const [currentTime, setCurrentTime] = useState("");
+  const [loginPopupOpen, setLoginPopupOpen] = useState(false);
   
   // 表单引用
   const formRef = useRef(null);
   
   // 初始化当前时间
   useEffect(() => {
+    // 更新当前时间
     updateCurrentTime();
+    
+    // 检查登录状态，未登录则显示登录弹窗
+    const isLoggedIn = checkLoginStatus();
+    if (!isLoggedIn) {
+      setTimeout(() => {
+        setLoginPopupOpen(true);
+      }, 500);
+    }
   }, []);
   
   // 更新当前时间格式为 YYYY-MM-DD HH:MM
@@ -163,74 +175,87 @@ const Deliver = () => {
     });
   };
 
-  return (
-    <View>
-      <Form 
-        ref={formRef}
-        onSubmit={onSubmit}
-      >
-        <Toast open={showToast} onClose={() => setShowToast(false)}>
-          {toastMessage}
-        </Toast>
-        
-        <Cell.Group inset>
-          <Field label="取件码" name="expressid" rules={[{ required: true, message: "请填写取件码" }]}>
-            <Input placeholder="取件码" />
-          </Field>
-          <Field label="地址" name="dromadd" rules={[{ required: true, message: "请填写地址" }]}>
-            <Input placeholder="地址" />
-          </Field>
-          <Field label="电话号码" name="Phonenumber" rules={[{ required: true, message: "请填写电话号码" }]}>
-            <Input placeholder="电话号码" />
-          </Field>
-          <Field label="备注" name="comment" rules={[{ required: false, message: "请填写备注" }]}>
-            <Input placeholder="备注" />
-          </Field>
-          
-          {/* 使用 Taroify 的 Uploader 组件 */}
-          <Field label="快递取件截图(菜鸟驿站等)" name="uploader" rules={[{ required: true }]}>
-            <Uploader
-              value={files}
-              maxFiles={1}
-              onChange={setFiles}
-              onDelete={onDeleteFile}
-              onUpload={onUploadImages}
-            />
-          </Field>
+  // 处理登录弹窗关闭
+  const handleCloseLoginPopup = () => {
+    setLoginPopupOpen(false);
+  };
 
-          {/* 自动填充时间字段 */}
-          <Field label="提交时间" name="submitTime" initialValue={currentTime}>
-            <Input value={currentTime} readOnly />
-          </Field>
-        </Cell.Group>
-        
-        {/* 按钮组 */}
-        <View style={{ margin: "16px", display: "flex", gap: "10px" }}>
-          <Button 
-            style={{ 
-              flex: 1,
-              background: "#f5f5f5",
-              border: "none",
-              color: "#666666"
-            }}
-            onClick={confirmReset}
-          > 
-            重置
-          </Button>
-          <Button 
-            style={{ 
-              flex: 2,
-              background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
-              border: "none",
-              color: "#000000"
-            }}
-            formType="submit"
-          >
-            提交订单
-          </Button>
-        </View>
-      </Form>
-    </View>
+  return (
+    <>
+      <View>
+        <Form 
+          ref={formRef}
+          onSubmit={onSubmit}
+        >
+          <Toast open={showToast} onClose={() => setShowToast(false)}>
+            {toastMessage}
+          </Toast>
+          
+          <Cell.Group inset>
+            <Field label="取件码" name="expressid" rules={[{ required: true, message: "请填写取件码" }]}>
+              <Input placeholder="取件码" />
+            </Field>
+            <Field label="地址" name="dromadd" rules={[{ required: true, message: "请填写地址" }]}>
+              <Input placeholder="地址" />
+            </Field>
+            <Field label="电话号码" name="Phonenumber" rules={[{ required: true, message: "请填写电话号码" }]}>
+              <Input placeholder="电话号码" />
+            </Field>
+            <Field label="备注" name="comment" rules={[{ required: false, message: "请填写备注" }]}>
+              <Input placeholder="备注" />
+            </Field>
+            
+            {/* 使用 Taroify 的 Uploader 组件 */}
+            <Field label="快递取件截图(菜鸟驿站等)" name="uploader" rules={[{ required: true }]}>
+              <Uploader
+                value={files}
+                maxFiles={1}
+                onChange={setFiles}
+                onDelete={onDeleteFile}
+                onUpload={onUploadImages}
+              />
+            </Field>
+
+            {/* 自动填充时间字段 */}
+            <Field label="提交时间" name="submitTime" initialValue={currentTime}>
+              <Input value={currentTime} readOnly />
+            </Field>
+          </Cell.Group>
+          
+          {/* 按钮组 */}
+          <View style={{ margin: "16px", display: "flex", gap: "10px" }}>
+            <Button 
+              style={{ 
+                flex: 1,
+                background: "#f5f5f5",
+                border: "none",
+                color: "#666666"
+              }}
+              onClick={confirmReset}
+            > 
+              重置
+            </Button>
+            <Button 
+              style={{ 
+                flex: 2,
+                background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
+                border: "none",
+                color: "#000000"
+              }}
+              formType="submit"
+            >
+              提交订单
+            </Button>
+          </View>
+        </Form>
+      </View>
+      
+      {/* 登录弹窗 */}
+      <LoginPopup 
+        open={loginPopupOpen} 
+        onClose={handleCloseLoginPopup} 
+      />
+    </>
   );
 };
 

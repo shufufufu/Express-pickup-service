@@ -63,6 +63,9 @@ export default defineConfig(async (merge, { command, mode }) => {
           }
         }
       },
+      miniCssExtractPluginOption: {
+        ignoreOrder: true
+      },
       hot:false,
       webpackChain(chain, webpack) {
         chain.merge({

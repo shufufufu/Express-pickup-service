@@ -1,0 +1,195 @@
+/* 
+   We're now using Tailwind CSS classes directly in the component, 
+   so this file can be kept minimal, just handling a few global 
+   overrides that can't be handled with Tailwind
+*/
+.login-popup-container :global {
+  /* Override Taroify popup styles for better aesthetic */
+}
+.login-popup-container :global .taroify-popup {
+  overflow: visible;
+}
+.login-popup-container :global .taroify-popup__overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+.login-popup {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  background-color: #fff;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.login-popup-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.login-title {
+  font-size: 17px;
+  font-weight: 500;
+  color: #191919;
+  margin-bottom: 6px;
+}
+.login-subtitle {
+  font-size: 14px;
+  color: #888;
+}
+.login-desc {
+  margin-bottom: 24px;
+}
+.login-desc-text {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 12px;
+  display: block;
+}
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.info-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #333;
+  margin-right: 8px;
+}
+.info-text {
+  font-size: 14px;
+  color: #333;
+}
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  margin-bottom: 16px;
+}
+.auth-button {
+  flex: 1;
+  height: 40px;
+  border-radius: 4px;
+  font-size: 15px;
+  line-height: 40px;
+  text-align: center;
+  padding: 0;
+}
+.auth-button::after {
+  border: none;
+}
+.deny-button {
+  margin-right: 12px;
+  background-color: #f5f5f5;
+  color: #333;
+}
+.agree-button {
+  background-color: #07c160;
+  color: #fff;
+}
+.skip-button {
+  width: 100%;
+  height: 36px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  color: #666;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.skip-button::after {
+  border: none;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.avatar-button {
+  padding: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: transparent;
+  margin-bottom: 20px;
+  line-height: normal;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+.avatar-button::after {
+  border: none;
+}
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #ddd;
+}
+.placeholder-icon {
+  font-size: 24px;
+  color: #bbb;
+  margin-bottom: 4px;
+}
+.placeholder-text {
+  font-size: 10px;
+  color: #999;
+}
+.nickname-container {
+  width: 100%;
+  margin-top: 20px;
+}
+.nickname-label {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  display: block;
+}
+.nickname-input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-size: 14px;
+  background-color: #f9f9f9;
+}
+.input-placeholder {
+  color: #bbb;
+}
+.authorize-button {
+  margin-top: auto;
+  width: 100%;
+  height: 44px;
+  border-radius: 4px;
+  background-color: #07c160;
+  color: #fff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  margin-bottom: 16px;
+}
+.authorize-button::after {
+  border: none;
+}
+.privacy-notice {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.privacy-text {
+  font-size: 12px;
+  color: #999;
+}

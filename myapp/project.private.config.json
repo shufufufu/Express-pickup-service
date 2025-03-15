@@ -3,5 +3,6 @@
   "projectname": "myapp",
   "setting": {
     "compileHotReLoad": false
-  }
+  },
+  "libVersion": "3.7.9"
 }
