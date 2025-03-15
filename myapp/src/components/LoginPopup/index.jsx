@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro';
 import { View, Text, Button, Input } from '@tarojs/components';
 import { Popup, Toast, Dialog } from '@taroify/core';
 import { saveLoginInfo } from '../../utils/auth';
+import headpic from "../../assets/headpic2.png";
 
 const LoginPopup = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -47,10 +48,9 @@ const LoginPopup = ({ open, onClose }) => {
 
   // 处理授权
   const handleAuthorize = async () => {
-    if (!userAvatar || !userNickname) {
-      showToastMessage('请先选择头像并输入昵称', 'fail');
-      return;
-    }
+    // 设置默认头像和昵称
+    const defaultAvatar = headpic;
+    const defaultNickname = '普通用户';
 
     setLoading(true);
     try {
@@ -62,10 +62,10 @@ const LoginPopup = ({ open, onClose }) => {
       Taro.setStorageSync('authStatus', 'accepted');
       setHasUserDenied(false);
       
-      // 存储用户信息和token
+      // 存储用户信息和token，使用用户提供的信息或默认值
       saveLoginInfo('mock_token_' + Date.now(), {
-        avatarUrl: userAvatar,
-        nickName: userNickname
+        avatarUrl: userAvatar || defaultAvatar,
+        nickName: userNickname || defaultNickname
       });
       
       // 存储code供后端使用
@@ -166,7 +166,7 @@ const LoginPopup = ({ open, onClose }) => {
           {/* 标题区域 */}
           <View className="text-center mb-5">
             <Text className="text-lg font-medium text-gray-800">微信授权登录</Text>
-            <Text className="block text-sm text-gray-500 mt-1">请授权微信头像和昵称</Text>
+            <Text className="block text-sm text-gray-500 mt-1">可选授权微信头像和昵称</Text>
           </View>
           
           {/* 当用户曾经拒绝过授权时，显示提示信息 */}

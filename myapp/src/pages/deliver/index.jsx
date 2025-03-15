@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { View } from "@tarojs/components";
 import { Form, Cell, Field, Input, Button, Toast, Uploader } from "@taroify/core";
 import Taro from "@tarojs/taro";
-import { checkLoginStatus } from '../../utils/auth';
 import LoginPopup from '../../components/LoginPopup';
+import useAuthStore from '../../store/authStore';
 
 const Deliver = () => { 
   const [showToast, setShowToast] = useState(false);
@@ -21,8 +21,8 @@ const Deliver = () => {
     updateCurrentTime();
     
     // 检查登录状态，未登录则显示登录弹窗
-    const isLoggedIn = checkLoginStatus();
-    if (!isLoggedIn) {
+    const needLogin = useAuthStore.getState().needLogin;
+    if (needLogin) {
       setTimeout(() => {
         setLoginPopupOpen(true);
       }, 500);

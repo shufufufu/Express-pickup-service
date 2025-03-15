@@ -1,11 +1,12 @@
 import { View, Text } from '@tarojs/components'
 import { Avatar, Cell, Button } from "@taroify/core"
-import headpic from "../../assets/headpic.jpg";
+import headpic from "../../assets/headpic2.png";
 import { Arrow } from "@taroify/icons";
 import Taro from '@tarojs/taro';
 import { useEffect, useState } from 'react';
-import { checkLoginStatus, clearLoginInfo } from '../../utils/auth';
+import { clearLoginInfo } from '../../utils/auth';
 import LoginPopup from '../../components/LoginPopup';
+import useAuthStore from '../../store/authStore';
 
 export default function personinfo () {
   const [userInfo, setUserInfo] = useState(null);
@@ -13,8 +14,8 @@ export default function personinfo () {
   
   useEffect(() => {
     // 检查登录状态，获取用户信息
-    const isLoggedIn = checkLoginStatus();
-    if (isLoggedIn) {
+    const needLogin = useAuthStore.getState().needLogin;
+    if (!needLogin) {
       const storedUserInfo = Taro.getStorageSync('userInfo');
       setUserInfo(storedUserInfo);
     } else {
@@ -28,7 +29,8 @@ export default function personinfo () {
   // 处理跳转到个人信息修改页面
   const handleNavigateToChangeInfo = () => {
     // 检查登录状态
-    if (!checkLoginStatus()) {
+    const needLogin = useAuthStore.getState().needLogin;
+    if (needLogin) {
       setLoginPopupOpen(true);
       return;
     }
@@ -62,8 +64,8 @@ export default function personinfo () {
     setLoginPopupOpen(false);
     
     // 重新检查登录状态
-    const isLoggedIn = checkLoginStatus();
-    if (isLoggedIn) {
+    const needLogin = useAuthStore.getState().needLogin;
+    if (!needLogin) {
       const storedUserInfo = Taro.getStorageSync('userInfo');
       setUserInfo(storedUserInfo);
     }
@@ -77,7 +79,7 @@ export default function personinfo () {
         onClick={handleNavigateToChangeInfo}
       >
         <Avatar 
-          src={userInfo?.avatarUrl || headpic} 
+          src={userInfo ? userInfo.avatarUrl : headpic } 
           size="large" 
           className='ml-4'
         />
