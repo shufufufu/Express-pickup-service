@@ -55,6 +55,9 @@ export default function personinfo () {
     // 更新状态
     setUserInfo(null);
     
+    // 更新全局登录状态
+    useAuthStore.getState().setNeedLogin(true);
+    
     // 显示登录弹窗
     setLoginPopupOpen(true);
   };

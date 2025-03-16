@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View } from "@tarojs/components";
-import { Form, Cell, Field, Input, Button, Toast, Uploader } from "@taroify/core";
+import { Form, Cell, Field, Input, Button, Toast, Uploader,Empty } from "@taroify/core";
 import Taro from "@tarojs/taro";
 import LoginPopup from '../../components/LoginPopup';
 import useAuthStore from '../../store/authStore';
+import UnLogin from "../../assets/unlogin.png";
 
 const Deliver = () => { 
   const [showToast, setShowToast] = useState(false);
@@ -182,7 +183,26 @@ const Deliver = () => {
 
   return (
     <>
-      <View>
+    {useAuthStore.getState().needLogin ? 
+    <View className="mt-32">
+      <Empty>
+      <Empty.Image
+        className="custom-empty__image"
+        src={UnLogin}
+      />
+      <Empty.Description>请先授权登录</Empty.Description>
+      <View className="mt-4">
+      <Button shape="round" className="bottom-button w-40" style={{ 
+                background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
+                fontSize: "16px",
+              }}>
+        授权登录
+      </Button>
+  </View>
+    </Empty>
+  </View>
+    :
+    <View>
         <Form 
           ref={formRef}
           onSubmit={onSubmit}
@@ -218,7 +238,7 @@ const Deliver = () => {
 
             {/* 自动填充时间字段 */}
             <Field label="提交时间" name="submitTime" initialValue={currentTime}>
-              <Input value={currentTime} readOnly />
+            {currentTime && <Input value={currentTime} readOnly />}
             </Field>
           </Cell.Group>
           
@@ -249,6 +269,8 @@ const Deliver = () => {
           </View>
         </Form>
       </View>
+    }
+      
       
       {/* 登录弹窗 */}
       <LoginPopup 
