@@ -20,14 +20,6 @@ const Deliver = () => {
   useEffect(() => {
     // 更新当前时间
     updateCurrentTime();
-    
-    // 检查登录状态，未登录则显示登录弹窗
-    const needLogin = useAuthStore.getState().needLogin;
-    if (needLogin) {
-      setTimeout(() => {
-        setLoginPopupOpen(true);
-      }, 500);
-    }
   }, []);
   
   // 更新当前时间格式为 YYYY-MM-DD HH:MM
@@ -190,12 +182,14 @@ const Deliver = () => {
         className="custom-empty__image"
         src={UnLogin}
       />
-      <Empty.Description>请先授权登录</Empty.Description>
+      <Empty.Description>授权登录后使用完整功能</Empty.Description>
       <View className="mt-4">
       <Button shape="round" className="bottom-button w-40" style={{ 
                 background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
                 fontSize: "16px",
-              }}>
+              }}
+              onClick={() => setLoginPopupOpen(true)}
+      >
         授权登录
       </Button>
   </View>

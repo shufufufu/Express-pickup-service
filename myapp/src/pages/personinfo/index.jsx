@@ -1,5 +1,5 @@
 import { View, Text } from '@tarojs/components'
-import { Avatar, Cell, Button } from "@taroify/core"
+import { Avatar, Toast, Button } from "@taroify/core"
 import headpic from "../../assets/headpic2.png";
 import { Arrow } from "@taroify/icons";
 import Taro from '@tarojs/taro';
@@ -11,10 +11,13 @@ import useAuthStore from '../../store/authStore';
 export default function personinfo () {
   const [userInfo, setUserInfo] = useState(null);
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
-  
+  const needLogin = useAuthStore((state) => state.needLogin);
+  const setNeedLogin = useAuthStore((state) => state.setNeedLogin);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
   useEffect(() => {
     // 检查登录状态，获取用户信息
-    const needLogin = useAuthStore.getState().needLogin;
     if (!needLogin) {
       const storedUserInfo = Taro.getStorageSync('userInfo');
       setUserInfo(storedUserInfo);
@@ -24,13 +27,13 @@ export default function personinfo () {
         setLoginPopupOpen(true);
       }, 500);
     }
-  }, []);
+  }, [needLogin]); // 添加登录状态作为依赖项
   
   // 处理跳转到个人信息修改页面
   const handleNavigateToChangeInfo = () => {
     // 检查登录状态
-    const needLogin = useAuthStore.getState().needLogin;
     if (needLogin) {
+      // 直接显示登录弹窗
       setLoginPopupOpen(true);
       return;
     }
@@ -40,8 +43,58 @@ export default function personinfo () {
     });
   };
 
-  // 处理跳转到反馈页面
+  // 处理历史记录点击
+  const handleNavigateToHistory = () => {
+    // 检查登录状态
+    if (needLogin) {
+      setToastMessage("请先登录后再使用此功能");
+        setShowToast(true);
+
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      return;
+    }
+    
+    // TODO: 跳转到历史记录页面
+    Taro.navigateTo({
+      url: '/pages/historyorder/index'
+    });
+  };
+
+  // 处理联系客服点击
+  const handleContactService = () => {
+    // 检查登录状态
+    if (needLogin) {
+      setToastMessage("请先登录后再使用此功能");
+        setShowToast(true);
+
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      return;
+    }
+    
+    // TODO: 实现联系客服功能
+    Taro.showToast({
+      title: '客服功能开发中',
+      icon: 'none',
+    });
+  };
+
+  // 修改建议与反馈处理函数
   const handleNavigateToFeedback = () => {
+    // 检查登录状态
+    if (needLogin) {
+      setToastMessage("请先登录后再使用此功能");
+      setShowToast(true);
+
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return;
+    }
+    
     Taro.navigateTo({
       url: '/pages/feedback/index'
     });
@@ -51,13 +104,10 @@ export default function personinfo () {
   const testLogin = () => {
     // 清除登录相关的数据
     clearLoginInfo();
-    
     // 更新状态
     setUserInfo(null);
-    
     // 更新全局登录状态
-    useAuthStore.getState().setNeedLogin(true);
-    
+    setNeedLogin(true);
     // 显示登录弹窗
     setLoginPopupOpen(true);
   };
@@ -76,6 +126,9 @@ export default function personinfo () {
 
   return (
     <View >
+      <Toast open={showToast} onClose={() => setShowToast(false)}>
+            {toastMessage}
+          </Toast>
       {/* 头像 */}
       <View 
         className='flex items-start bg-[#ffffff] rounded-xl w-full h-20 pt-3'
@@ -101,7 +154,10 @@ export default function personinfo () {
       {/* 功能 */}
       <View className="w-full mt-4 bg-white rounded-lg overflow-hidden">
         {/* 历史记录 */}
-        <View className="flex justify-between items-center px-3 py-4 border-b border-gray-100">
+        <View 
+          className="flex justify-between items-center px-3 py-4 border-b border-gray-100"
+          onClick={handleNavigateToHistory}
+        >
           <Text className="text-gray-600">历史记录</Text>
           <View className='flex items-center text-[#b6ccd8] text-xl'>
           <Arrow className='ml-2'/>
@@ -122,6 +178,7 @@ export default function personinfo () {
         {/* 联系客服 */}
         <View 
           className="flex justify-between items-center px-3 py-4 border-b border-gray-100"
+          onClick={handleContactService}
         >
           <Text className="text-gray-600">联系客服</Text>
           <View className='flex items-center text-[#b6ccd8] text-xl'>

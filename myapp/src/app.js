@@ -1,15 +1,19 @@
-import { useEffect } from 'react'
-import Taro, { useDidShow } from '@tarojs/taro'
-import useAuthStore from './store/authStore'
-import './app.less'
+import { useEffect } from 'react';
+import Taro, { useDidShow } from '@tarojs/taro';
+import useAuthStore from './store/authStore';
+import './app.less';
 
 function App(props) {
   useDidShow(() => {
     // 在页面显示时更新登录状态
-    useAuthStore.getState().updateLoginStatus()
-  })
+    useAuthStore.getState().updateLoginStatus();
+  });
 
-  return props.children
+  return (
+    <>
+      {props.children} {/* 渲染页面内容 */}
+    </>
+  );
 }
 
-export default App
+export default App;

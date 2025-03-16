@@ -104,3 +104,22 @@ taroify表单组件重置和图片上传修复
 上来先配一个小时的项目，昨天晚上还能打开，白天就打不开了
 修了一下午，好了
 登录模块以外的简单，taro还是集成了挺多的
+
+
+
+###### 3.16
+
+zustand维护登录状态
+
+优化未登录状态
+- 未登录不展示提交订单页面
+- 修复一个bug，展开讲讲
+> 先渲染了所有页面之后在别的页面登录了，个人中心不会渲染加载，但是我用全局状态管理了，一直找不到原因，后来发现是只获取了最新状态但是没有更新ui，这点还是比较坑的，useEffect依赖于`useAuthStore.getState().needLogin`，但 `useAuthStore.getState()` 只是获取一次值，不会触发重新渲染，在testlogin中一样，在 `testLogin` 里用 `useAuthStore.getState().setNeedLogin(true)` 修改状态，但 `getState()` 只是获取状态，**不会触发 UI 更新**，
+> 解决办法：
+> 使用修改语法而非获取语法
+> `const needLogin = useAuthStore((state) => state.needLogin);
+> `const setNeedLogin = useAuthStore((state) => state.setNeedLogin);
+
+完成轻提示的组件替换
+
+修改个人信息页面初步完善
