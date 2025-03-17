@@ -142,8 +142,8 @@ const Deliver = () => {
   // 处理表单重置确认
   const confirmReset = () => {
     Taro.showModal({
-      title: '确认重置',
-      content: '确定要重置吗？所有已填写的信息将被清空。',
+      title: '确认清空',
+      content: '确定要清空吗？所有已填写的信息将被清空。',
       success: function (res) {
         if (res.confirm) {
           // 手动重置表单
@@ -159,7 +159,7 @@ const Deliver = () => {
           
           // 显示提示
           Taro.showToast({
-            title: '表单已重置',
+            title: '订单已清空',
             icon: 'success',
             duration: 1500
           });
@@ -247,7 +247,7 @@ const Deliver = () => {
               }}
               onClick={confirmReset}
             > 
-              重置
+              清空
             </Button>
             <Button 
               style={{ 

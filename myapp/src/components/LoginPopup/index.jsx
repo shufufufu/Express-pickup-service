@@ -3,7 +3,6 @@ import Taro from '@tarojs/taro';
 import { View, Text, Button, Input } from '@tarojs/components';
 import { Popup, Toast, Dialog } from '@taroify/core';
 import { saveLoginInfo } from '../../utils/auth';
-import useAuthStore from '../../store/authStore';
 import headpic from "../../assets/headpic2.png";
 
 const LoginPopup = ({ open, onClose }) => {
@@ -70,8 +69,7 @@ const LoginPopup = ({ open, onClose }) => {
       });
       
       // 更新全局状态
-      const { setNeedLogin } = useAuthStore.getState();
-      setNeedLogin(false);
+      useAuthStore.getState().setNeedLogin(false);
       
       // 存储code供后端使用
       Taro.setStorageSync('code', loginRes.code);
@@ -143,7 +141,7 @@ const LoginPopup = ({ open, onClose }) => {
       'dev_token_' + Date.now(), 
       {
         nickName: '测试用户',
-        avatarUrl: headpic,
+        avatarUrl: 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
       }
     );
     
