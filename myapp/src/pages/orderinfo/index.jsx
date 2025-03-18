@@ -24,7 +24,7 @@ const OrderInfo = () => {
   useEffect(() => {
     // 获取路由参数
     const params = getCurrentInstance().router.params;
-    const { id, expressid, dromadd, stepstate, downtime } = params;
+    const { id, expressid, dromadd, stepstate, downtime, ordertime } = params;
     
     // 模拟从服务器获取数据
     setTimeout(() => {
@@ -34,7 +34,7 @@ const OrderInfo = () => {
         expressid: expressid || "107-5-207", // 快递取件码
         dromadd: decodeURIComponent(dromadd || "南湖五栋207"), // 宿舍地址
         phone: "150****8888", // 联系电话
-        submitTime: "2023-07-10 15:30", // 提交时间
+        submitTime: ordertime, // 提交时间
         estimatedArrival: parseInt(stepstate) >= STEP_STATES.STEP1.ACCEPTED ? "2023-07-10 18:30" : "--", // 预计送达时间
         stepstate: parseInt(stepstate || 0), // 步骤状态
         statusHistory: [ // 状态历史记录
@@ -206,7 +206,7 @@ const OrderInfo = () => {
           borderRadius: "12px"
         }}>
           <View className="flex items-center mb-3">
-            <Tag color={getStatusColor(orderInfo.stepstate)} className="mr-2">
+            <Tag color={getStatusColor(orderInfo.stepstate)} className="mr-2 h-6">
               {getStatusText(orderInfo.stepstate)}
             </Tag>
             <Text className="text-lg font-medium text-gray-800">
@@ -241,7 +241,7 @@ const OrderInfo = () => {
       {/* 步骤进度 */}
       <View className="mx-4 mt-4 bg-white rounded-xl p-4">
         <Text className="text-base font-medium mb-2">订单进度</Text>
-        <CustomSteps status={orderInfo.stepstate} />
+        <CustomSteps status={orderInfo.stepstate} mode = {2}/>
       </View>
       
       {/* 派送员信息 */}

@@ -61,11 +61,11 @@ const OrderBox = (props) => {
   // 处理卡片点击，跳转到订单详情
   const navigateToOrderDetail = () => {
     // 准备要传递的参数
-    const { expressid, dromadd, downtime } = props.data;
+    const { expressid, dromadd, downtime , orderTime } = props.data;
     
     // 导航到订单详情页面
     Taro.navigateTo({
-      url: `/pages/orderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&stepstate=${statusIndex}&downtime=${downtime}`
+      url: `/pages/orderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&stepstate=${currentStatus}&downtime=${downtime}&ordertime=${orderTime}`
     });
   };
 
