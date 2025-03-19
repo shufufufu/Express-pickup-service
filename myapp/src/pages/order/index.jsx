@@ -17,6 +17,9 @@ const initialData = [
     dromadd: "南湖五栋207",
     orderTime: Date.now() - 1000 * 60 * 60, // 下单时间：1小时前
     stepstate: 0,
+    comment: "",
+    iphoneNumber: "",
+    orderid: "",
   },
   {
     expressid: "108-3-401",

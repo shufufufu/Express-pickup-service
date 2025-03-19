@@ -4,6 +4,7 @@ import { View, Text, Button, Input } from '@tarojs/components';
 import { Popup, Toast, Dialog } from '@taroify/core';
 import { saveLoginInfo } from '../../utils/auth';
 import headpic from "../../assets/headpic2.png";
+import useAuthStore from '../../store/authStore';
 
 const LoginPopup = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);

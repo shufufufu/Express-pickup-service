@@ -5,13 +5,14 @@ import { Arrow, LocationOutlined, ClockOutlined, PhotoOutlined, PhoneOutlined, C
 import Taro, { getCurrentInstance } from "@tarojs/taro";
 import CustomSteps from "../order/components/Steps";
 import { STEP_STATES } from "../order/components/Steps";
-
+import dayjs from 'dayjs';
+import rider from "../../assets/rider.png";
 // 模拟快递员数据
 const courierInfo = {
   name: "张师傅",
-  avatar: "https://joeschmoe.io/api/v1/random",
+  avatar: rider,
   phone: "138****6789",
-  rating: 4.9,
+  rating: 5.0,
   deliveryCount: 1024,
   joinDate: "2022-01-01"
 };
@@ -34,7 +35,7 @@ const OrderInfo = () => {
         expressid: expressid || "107-5-207", // 快递取件码
         dromadd: decodeURIComponent(dromadd || "南湖五栋207"), // 宿舍地址
         phone: "150****8888", // 联系电话
-        submitTime: ordertime, // 提交时间
+        submitTime: dayjs(ordertime).format('YYYY-MM-DD HH:mm:ss'), // 提交时间
         estimatedArrival: parseInt(stepstate) >= STEP_STATES.STEP1.ACCEPTED ? "2023-07-10 18:30" : "--", // 预计送达时间
         stepstate: parseInt(stepstate || 0), // 步骤状态
         statusHistory: [ // 状态历史记录
@@ -58,7 +59,7 @@ const OrderInfo = () => {
           size: "小型包裹"
         },
         downtime: parseInt(downtime || 3600000), // 倒计时
-        remark: "请轻拿轻放，易碎物品", // 备注
+        comment: "请轻拿轻放，易碎物品", // 备注
         payment: { // 支付信息
           amount: "3.00",
           method: "微信支付",
@@ -305,15 +306,15 @@ const OrderInfo = () => {
           <Cell title="提交时间" icon={<ClockOutlined />}>
             <View className="text-right">{orderInfo.submitTime}</View>
           </Cell>
-          {orderInfo.remark && (
+          {orderInfo.comment && (
             <Cell title="备注" icon={<CommentOutlined />}>
-              <View className="text-right">{orderInfo.remark}</View>
+              <View className="text-right">{orderInfo.comment}</View>
             </Cell>
           )}
         </Cell.Group>
       </View>
       
-      {/* 包裹信息 */}
+      {/* 包裹信息 
       <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
         <Cell title="包裹信息" />
         <View className="grid grid-cols-2 gap-4 p-4">
@@ -335,6 +336,7 @@ const OrderInfo = () => {
           </View>
         </View>
       </View>
+      */}
       
       {/* 取件截图 */}
       <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
