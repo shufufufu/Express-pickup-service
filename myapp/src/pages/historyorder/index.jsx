@@ -1,18 +1,17 @@
-import { BackTop } from "@taroify/core"
+import React from "react";
+import { View } from "@tarojs/components";
 
 function HistoryOrder() {
-  const list = [...Array(50).keys()]
-
-  return (
-    <View>
-      <Cell.Group>
-        {list.map((v) => {
-          return <Cell key={v}>{v}</Cell>
-        })}
-      </Cell.Group>
-      <BackTop>返回顶部</BackTop>
-    </View>
-  )
+  return <View>
+        history,
+        订单号，
+        图片，
+        时间，
+        完成状态，
+        支付价格，
+        再来一单，
+        评价，
+    </View>;
 }
 
-export default HistoryOrder
+export default HistoryOrder;
