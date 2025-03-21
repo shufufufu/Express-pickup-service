@@ -35,7 +35,7 @@ const OrderInfo = () => {
         expressid: expressid || "107-5-207", // 快递取件码
         dromadd: decodeURIComponent(dromadd || "南湖五栋207"), // 宿舍地址
         phone: "150****8888", // 联系电话
-        submitTime: dayjs(ordertime).format('YYYY-MM-DD HH:mm:ss'), // 提交时间
+        submitTime: dayjs(Number(ordertime)).format('YYYY-MM-DD HH:mm:ss'), // 提交时间
         estimatedArrival: parseInt(stepstate) >= STEP_STATES.STEP1.ACCEPTED ? "2023-07-10 18:30" : "--", // 预计送达时间
         stepstate: parseInt(stepstate || 0), // 步骤状态
         statusHistory: [ // 状态历史记录

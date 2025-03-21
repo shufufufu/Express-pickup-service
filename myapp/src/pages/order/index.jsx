@@ -8,6 +8,7 @@ import { checkLoginStatus } from '../../utils/auth'; // 更新导入路径
 import LoginPopup from '../../components/LoginPopup';
 import Taro from '@tarojs/taro';
 
+
 const oneDay = 24 * 60 * 60 * 1000; // 一天的毫秒数
 
 // 模拟后端返回的订单数据，每个订单包含下单时间 orderTime（时间戳）

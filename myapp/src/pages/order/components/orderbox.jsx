@@ -127,6 +127,7 @@ const OrderBox = (props) => {
       <View className="pb-0 mb-0 mt-2">
         <Steps status={currentStatus} />
       </View>
+      
     </View>
   );
 };
