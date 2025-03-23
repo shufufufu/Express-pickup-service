@@ -1,6 +1,6 @@
 export default defineAppConfig({
   pages: [
-    
+
     'pages/order/index',
     'pages/deliver/index',
     'pages/personinfo/index',
@@ -9,6 +9,7 @@ export default defineAppConfig({
     'pages/orderinfo/index',
     'pages/login/index',
     'pages/historyorder/index',
+    'pages/historyorderinfo/index',
 
   ],
   window: {

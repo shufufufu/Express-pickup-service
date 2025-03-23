@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { View } from "@tarojs/components";
 import { PullRefresh, Empty , BackTop } from "@taroify/core";
 import { usePageScroll } from "@tarojs/taro";
-import historyOrderBox from "./components/historyOrderBox";
+import HistoryOrderBox from "./components/historyOrderBox";
 
 function HistoryOrder() {
   const [reachTop, setReachTop] = useState(true);
@@ -31,9 +31,9 @@ function HistoryOrder() {
   }, []);
 
 
+
   return (
-  <View>
-      <PullRefresh
+  <PullRefresh
         loading={loading}
         reachTop={reachTop}
         onRefresh={handleRefresh}
@@ -41,38 +41,38 @@ function HistoryOrder() {
         pullingText="下拉刷新"
         loosingText="释放刷新"
         successText="刷新成功"
-      >
-      <View className="pb-4">
-          {historyOrderData.length === 0 ? (
-            <Empty>
-              <Empty.Image />
-              <Empty.Description>暂时没有历史订单</Empty.Description>
-            </Empty>
-          ) : (
-            <>
-              {/*{historyOrderData.map((item, index) => (
-                <historyOrderBox key={index} data={item} />
-              ))}*/}
-              <historyOrderBox/>
-            </>
-          )}
-          <BackTop
-            right={30}         // 距离页面右侧的距离
-            bottom={40}        // 距离页面底部的距离
-            offset={200}       // 滚动高度达到200px时显示 BackTop
-            onClick={() => {
-              Taro.pageScrollTo({
-                scrollTop: 0,
-                duration: 300, // 滚动持续时间
-              });
-            }}
-            zIndex={100}       // 层级
-          />
-        </View>
-      
-      
-      </PullRefresh>
-  </View>
+  >
+    <View>
+        <View className="pb-4 min-h-screen">
+            {historyOrderData.length !== 0 ? (
+              <Empty>
+                <Empty.Image />
+                <Empty.Description>暂时没有历史订单</Empty.Description>
+              </Empty>
+            ) : (
+              <>
+                {/*{historyOrderData.map((item, index) => (
+                  <historyOrderBox key={index} data={item} />
+                ))}*/}
+                <HistoryOrderBox/>
+                <HistoryOrderBox/>
+              </>
+            )}
+            <BackTop
+              right={30}         // 距离页面右侧的距离
+              bottom={40}        // 距离页面底部的距离
+              offset={200}       // 滚动高度达到200px时显示 BackTop
+              onClick={() => {
+                Taro.pageScrollTo({
+                  scrollTop: 0,
+                  duration: 300, // 滚动持续时间
+                });
+              }}
+              zIndex={100}       // 层级
+            />
+          </View> 
+      </View>
+  </PullRefresh>
     )
 }
 

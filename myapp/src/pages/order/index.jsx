@@ -122,8 +122,7 @@ export default function Order() {
   };
 
   return (
-    <View className="bg-gray-100 min-h-screen">
-      <PullRefresh
+  <PullRefresh
         loading={loading}
         reachTop={reachTop}
         onRefresh={handleRefresh}
@@ -131,7 +130,9 @@ export default function Order() {
         pullingText="下拉刷新"
         loosingText="释放刷新"
         successText="刷新成功"
-      >
+  >
+    <View className="bg-gray-100 min-h-screen">
+      
         <View className="pb-4">
           {orderData.length === 0 ? (
             <Empty>
@@ -165,10 +166,11 @@ export default function Order() {
             zIndex={100}       // 层级
           />
         </View>
-      </PullRefresh>
+      
 
       {/* 登录弹窗 */}
       <LoginPopup open={loginPopupOpen} onClose={handleCloseLoginPopup} />
     </View>
+  </PullRefresh>
   );
 }
