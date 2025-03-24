@@ -74,10 +74,6 @@ const OrderInfo = () => {
     }, 800);
   }, []);
 
-  // 处理返回
-  const handleBack = () => {
-    Taro.navigateBack();
-  };
   
   // 格式化时间
   const formatTime = (ms) => {

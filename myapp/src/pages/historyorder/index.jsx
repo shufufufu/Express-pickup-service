@@ -5,6 +5,28 @@ import { PullRefresh, Empty , BackTop } from "@taroify/core";
 import { usePageScroll } from "@tarojs/taro";
 import HistoryOrderBox from "./components/historyOrderBox";
 
+const initialData = [
+  {
+    expressid: "107-5-207",
+    dromadd: "南湖五栋207",
+    orderTime: Date.now() - 1000 * 60 * 60, // 下单时间：1小时前
+    comment: "",
+    iphoneNumber: "",
+    orderid: "",
+    orderImage:"",
+  },
+  {
+    expressid: "108-3-401",
+    dromadd: "南湖三栋401",
+    orderTime: Date.now() - 1000 * 60 * 30, // 下单时间：30分钟前
+    comment: "",
+    iphoneNumber: "",
+    orderid: "",
+    orderImage:"",
+  },
+];
+
+
 function HistoryOrder() {
   const [reachTop, setReachTop] = useState(true);
   const [historyOrderData, setHistoryOrderData] = useState([]);
@@ -16,11 +38,12 @@ function HistoryOrder() {
 
   const handleRefresh = async () => {
     setLoading(true);
-    const refreshedData = [] // 从后端获取最新数据的逻辑需要根据实际情况进行编写，这里只是一个示例，具体实现可能会涉及到网络请求、数据处理等操作
+     // 从后端获取最新数据的逻辑需要根据实际情况进行编写，这里只是一个示例，具体实现可能会涉及到网络请求、数据处理等操作
 
     setTimeout(() => {
       // 模拟从后端获取历史订单数据
-
+      const refreshedData = initialData
+      
       setHistoryOrderData(refreshedData);
       setLoading(false);
     }, 1000);
@@ -44,18 +67,16 @@ function HistoryOrder() {
   >
     <View>
         <View className="pb-4 min-h-screen">
-            {historyOrderData.length !== 0 ? (
+            {historyOrderData.length === 0 ? (
               <Empty>
                 <Empty.Image />
                 <Empty.Description>暂时没有历史订单</Empty.Description>
               </Empty>
             ) : (
               <>
-                {/*{historyOrderData.map((item, index) => (
-                  <historyOrderBox key={index} data={item} />
-                ))}*/}
-                <HistoryOrderBox/>
-                <HistoryOrderBox/>
+                {historyOrderData.map((item, index) => (
+                  <HistoryOrderBox key={index} data={item} />
+                ))}
               </>
             )}
             <BackTop

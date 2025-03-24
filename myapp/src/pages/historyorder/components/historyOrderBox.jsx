@@ -1,26 +1,22 @@
 import { View, Text, Image } from "@tarojs/components";
 import {  Toast } from "@taroify/core"
-import React from "react";
-import { useState } from "react";
+import React ,{ useState }from "react";
 import { Arrow } from "@taroify/icons";
 import Taro from "@tarojs/taro";
 import orderPic from "../../../assets/orderpic.jpg";
 
-const HistoryOrderBox = () => {
-
-
+const HistoryOrderBox = (props) => {
 
   const [open, setOpen] = useState(false)
 
 
   const navigateToHistoryOrderDetail = () => {
     // 准备要传递的参数
-    //const { expressid, dromadd, downtime , orderTime } = props.data;
+    const { expressid, dromadd , orderTime} = props.data;
     
     // 导航到订单详情页面
     Taro.navigateTo({
-      //url: `/pages/orderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&stepstate=${currentStatus}&downtime=${downtime}&ordertime=${orderTime}`
-      url: `/pages/historyorderinfo/index`
+      url: `/pages/historyorderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&ordertime=${orderTime}`,
     });
   };
 
