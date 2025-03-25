@@ -26,12 +26,10 @@ const initialData = [
   },
 ];
 
-
 function HistoryOrder() {
   const [reachTop, setReachTop] = useState(true);
   const [historyOrderData, setHistoryOrderData] = useState([]);
   const [loading, setLoading] = useState(false);
-
 
   //检测页面滚动
   usePageScroll(({ scrollTop }) => setReachTop(scrollTop === 0));
@@ -52,8 +50,6 @@ function HistoryOrder() {
   useEffect(() => {
     handleRefresh();
   }, []);
-
-
 
   return (
   <PullRefresh
@@ -77,6 +73,12 @@ function HistoryOrder() {
                 {historyOrderData.map((item, index) => (
                   <HistoryOrderBox key={index} data={item} />
                 ))}
+                <View className="text-center text-gray-400 text-sm mt-4">
+                  —— 仅展示最近三个月的订单 ——
+                </View>
+                <View className="text-center text-gray-400 text-sm mt-1">
+                  —— 若需获取更多数据请联系相关客服 ——
+                </View>
               </>
             )}
             <BackTop

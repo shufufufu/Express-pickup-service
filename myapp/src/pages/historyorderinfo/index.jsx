@@ -46,10 +46,7 @@ const HistoryOrderInfo = () => {
   useEffect(() => {
     // 获取路由参数
     const params = getCurrentInstance().router.params;
-    console.log("params", params);
-    console.log("params", "123123");
     const { id, expressid, dromadd, ordertime } = params;
-    console.log("ordertime", ordertime);
 
     // 模拟从服务器获取数据
     const timer = setTimeout(() => {
@@ -130,7 +127,7 @@ const HistoryOrderInfo = () => {
 
         {/* 会员权限 */}
         <View
-          className="bg-[#FEFFFB] h-20 m-3 mt-32 pt-3 p-2"
+          className="bg-[#FEFFFB] h-20 m-3 mt-32 pt-3 p-2 rounded-sm"
           style={{ background: "linear-gradient(to bottom, #d4eaf7, #FEFFFB)" }}
         >
           <View className="flex items-center">
@@ -157,8 +154,8 @@ const HistoryOrderInfo = () => {
 
         {historyOrderInfo && (
           <View>
-            /* 派送员信息 */
-            <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
+            {/* 派送员信息 */}
+            <View className="mx-4 mt-4 bg-[#FEFFFB] rounded-sm overflow-hidden">
               <SwipeCell>
                 <Cell>
                   <View className="flex w-full py-2">
@@ -187,8 +184,8 @@ const HistoryOrderInfo = () => {
                 </Cell>
               </SwipeCell>
             </View>
-            /* 取件信息 */
-            <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
+            {/* 取件信息 */}
+            <View className="mx-4 mt-4 bg-[#FEFFFB] rounded-sm overflow-hidden">
               <Cell.Group>
                 <Cell title="取件信息" icon={<PhotoOutlined />} />
                 <Cell title="取件码">
@@ -216,8 +213,8 @@ const HistoryOrderInfo = () => {
                 )}
               </Cell.Group>
             </View>
-            /* 取件截图 */
-            <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
+            {/* 取件截图 */}
+            <View className="mx-4 mt-4 bg-[#FEFFFB] rounded-sm overflow-hidden">
               <Cell title="取件截图" />
               <View className="p-4">
                 <Image
@@ -236,8 +233,8 @@ const HistoryOrderInfo = () => {
                 </Text>
               </View>
             </View>
-            /* 支付信息 */
-            <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
+            {/* 支付信息 */}
+            <View className="mx-4 mt-4 bg-white rounded-sm overflow-hidden">
               <Cell title="支付信息" />
               <View className="p-4">
                 <View className="flex justify-between mb-2">
@@ -288,6 +285,9 @@ const HistoryOrderInfo = () => {
         </View>
       </View>
       */}
+        <View className="text-center text-gray-500 mt-4">
+          —— 订单信息仅保留三个月 ——
+        </View>
       </View>
     </View>
   );

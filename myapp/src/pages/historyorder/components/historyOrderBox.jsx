@@ -20,6 +20,19 @@ const HistoryOrderBox = (props) => {
     });
   };
 
+  const navigateToFeedBack = () => {
+    // 导航到反馈页面
+    Taro.navigateTo({
+      url: "/pages/feedback/index",
+    });
+  }
+
+  const navigateTodeliver = () => {
+    // 导航到反馈页面
+    Taro.switchTab({
+      url: "/pages/deliver/index",
+    });
+  }
 
 
   return (
@@ -63,11 +76,24 @@ const HistoryOrderBox = (props) => {
         {/* 按钮 */}
         <View className="mt-4 flex justify-end gap-2 mr-2">
           <View 
-            onClick={() => setOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation(); // 阻止事件冒泡
+              setOpen(true);
+            }}
           className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm"
           >开发票</View>
-          <View className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm">评价一下</View>
-          <View className="px-4 py-1 bg-black text-white text-sm rounded-sm">再来一单</View>
+          <View 
+          onClick={(e) => {
+            e.stopPropagation(); // 阻止事件冒泡
+            navigateToFeedBack();
+          }}
+          className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm">评价一下</View>
+          <View 
+          onClick={(e) => {
+            e.stopPropagation(); // 阻止事件冒泡
+            navigateTodeliver();
+          }}
+          className="px-4 py-1 bg-black text-white text-sm rounded-sm">再来一单</View>
         </View>
       </View>
     </View>
