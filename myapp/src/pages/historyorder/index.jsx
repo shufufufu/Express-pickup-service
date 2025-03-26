@@ -3,6 +3,7 @@ import { View } from "@tarojs/components";
 import { PullRefresh, Empty, BackTop, List, Loading } from "@taroify/core";
 import HistoryOrderBox from "./components/historyOrderBox";
 import Taro from "@tarojs/taro";
+import  DataSelect from "./components/dataselect"
 
 const PAGE_SIZE = 5;
 const TOTAL_PAGES = 10;
@@ -132,6 +133,7 @@ function HistoryOrder() {
           )}
         </List.Placeholder>
       </List>
+      <DataSelect />
       <BackTop onClick={() => Taro.pageScrollTo({ scrollTop: 0, duration: 300 })} />
     </PullRefresh>
   );
