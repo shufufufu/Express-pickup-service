@@ -101,6 +101,7 @@ function HistoryOrder() {
       loosingText="释放刷新"
       successText="刷新成功"
     >
+      <DataSelect />
       <List loading={isFetching} hasMore={hasMore} onLoad={loadMoreData}>
         {historyOrderData.length === 0 && !loading ? (
           <Empty>
@@ -133,7 +134,6 @@ function HistoryOrder() {
           )}
         </List.Placeholder>
       </List>
-      <DataSelect />
       <BackTop onClick={() => Taro.pageScrollTo({ scrollTop: 0, duration: 300 })} />
     </PullRefresh>
   );
