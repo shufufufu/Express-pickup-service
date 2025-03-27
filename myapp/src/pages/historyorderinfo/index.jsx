@@ -285,7 +285,7 @@ const HistoryOrderInfo = () => {
         </View>
       </View>
       */}
-        <View className="text-center text-gray-500 mt-4">
+        <View className="text-center text-gray-500 mt-4 h-20">
           —— 订单信息仅保留三个月 ——
         </View>
       </View>

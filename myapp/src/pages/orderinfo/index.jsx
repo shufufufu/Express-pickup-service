@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { View, Image, Text, ScrollView } from "@tarojs/components";
-import { Cell, Tag, Button, Avatar, NoticeBar, Loading, Divider, SwipeCell, Dialog } from "@taroify/core";
+import { Cell, Tag, Button, Avatar, NoticeBar, Loading, Divider, SwipeCell, Dialog, Toast } from "@taroify/core";
 import { Arrow, LocationOutlined, ClockOutlined, PhotoOutlined, PhoneOutlined, CommentOutlined, StarOutlined, ManagerOutlined, BillOutlined } from "@taroify/icons";
 import Taro, { getCurrentInstance } from "@tarojs/taro";
 import CustomSteps from "../order/components/Steps";
 import { STEP_STATES } from "../order/components/Steps";
 import dayjs from 'dayjs';
 import rider from "../../assets/rider.png";
+
 // 模拟快递员数据
 const courierInfo = {
   name: "张师傅",
@@ -21,6 +22,9 @@ const OrderInfo = () => {
   const [orderInfo, setOrderInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCourierDialog, setShowCourierDialog] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("text");
   
   useEffect(() => {
     // 获取路由参数
@@ -74,6 +78,13 @@ const OrderInfo = () => {
     }, 800);
   }, []);
 
+  // 显示Toast
+  const showToast = (message, type = "text", duration = 1500) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastOpen(true);
+    setTimeout(() => setToastOpen(false), duration);
+  };
   
   // 格式化时间
   const formatTime = (ms) => {
@@ -124,28 +135,8 @@ const OrderInfo = () => {
   // 联系骑手
   const contactCourier = () => {
     if (!orderInfo?.courierInfo) return;
-    
-    Taro.showActionSheet({
-      itemList: ['拨打电话', '发送消息'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          Taro.makePhoneCall({
-            phoneNumber: '13888888888', // 实际应用中使用真实号码
-            fail: () => {
-              Taro.showToast({
-                title: '拨打电话失败',
-                icon: 'none'
-              });
-            }
-          });
-        } else if (res.tapIndex === 1) {
-          Taro.showToast({
-            title: '消息发送功能开发中',
-            icon: 'none'
-          });
-        }
-      }
-    });
+    showToast("感谢您的好评", "success");
+    setShowCourierDialog(false); // 关闭弹窗
   };
   
   // 查看骑手详情
@@ -153,19 +144,12 @@ const OrderInfo = () => {
     setShowCourierDialog(true);
   };
   
-  // 联系客服
+  // 催促骑手
   const contactCustomerService = () => {
-    Taro.showToast({
-      title: '正在连接客服...',
-      icon: 'loading',
-      duration: 1500
-    });
+    showToast("正在催促骑手...", "loading", 1000);
     
     setTimeout(() => {
-      Taro.showToast({
-        title: '客服功能开发中',
-        icon: 'none'
-      });
+      showToast("骑手正在马不停蹄的送货中", "text", 1500);
     }, 1500);
   };
   
@@ -175,12 +159,9 @@ const OrderInfo = () => {
     
     Taro.setClipboardData({
       data: orderInfo.id,
-      success: () => {
-        Taro.showToast({
-          title: '订单号已复制',
-          icon: 'success'
-        });
-      }
+      showToast: false // 禁用默认的复制提示
+    }).then(() => {
+      showToast("订单号已复制", "success");
     });
   };
 
@@ -195,6 +176,10 @@ const OrderInfo = () => {
 
   return (
     <ScrollView scrollY className="min-h-screen bg-gray-50">
+      {/* Toast组件 */}
+      <Toast open={toastOpen} type={toastType}>
+        {toastMessage}
+      </Toast>
       
       {/* 状态卡片 */}
       <View className="mx-4 mt-4 rounded-xl overflow-hidden">
@@ -260,18 +245,6 @@ const OrderInfo = () => {
                   <View className="flex mt-2">
                     <Button 
                       size="mini" 
-                      className="mr-2"
-                      style={{ 
-                        background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
-                        border: "none",
-                        color: "#000000"
-                      }}
-                      onClick={contactCourier}
-                    >
-                      联系骑手
-                    </Button>
-                    <Button 
-                      size="mini" 
                       variant="outlined"
                       color="primary"
                       onClick={viewCourierDetail}
@@ -309,30 +282,6 @@ const OrderInfo = () => {
           )}
         </Cell.Group>
       </View>
-      
-      {/* 包裹信息 
-      <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
-        <Cell title="包裹信息" />
-        <View className="grid grid-cols-2 gap-4 p-4">
-          <View className="bg-gray-50 p-3 rounded-lg">
-            <Text className="text-xs text-gray-500">来源</Text>
-            <Text className="block font-medium mt-1">{orderInfo.packageInfo.source}</Text>
-          </View>
-          <View className="bg-gray-50 p-3 rounded-lg">
-            <Text className="text-xs text-gray-500">重量</Text>
-            <Text className="block font-medium mt-1">{orderInfo.packageInfo.weight}</Text>
-          </View>
-          <View className="bg-gray-50 p-3 rounded-lg">
-            <Text className="text-xs text-gray-500">类型</Text>
-            <Text className="block font-medium mt-1">{orderInfo.packageInfo.type}</Text>
-          </View>
-          <View className="bg-gray-50 p-3 rounded-lg">
-            <Text className="text-xs text-gray-500">大小</Text>
-            <Text className="block font-medium mt-1">{orderInfo.packageInfo.size}</Text>
-          </View>
-        </View>
-      </View>
-      */}
       
       {/* 取件截图 */}
       <View className="mx-4 mt-4 bg-white rounded-xl overflow-hidden">
@@ -402,10 +351,10 @@ const OrderInfo = () => {
       
       {/* 底部操作按钮 */}
       <View className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg">
-        <View className="flex space-x-3">
+        <View className="flex space-x-5">
           <Button 
             block
-            className="flex-1"
+            className="flex-2"
             style={{ 
               background: "#f5f5f5",
               border: "none",
@@ -418,7 +367,7 @@ const OrderInfo = () => {
           </Button>
           <Button 
             block
-            className="flex-2"
+            className="flex-3"
             style={{ 
               background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
               border: "none",
@@ -427,7 +376,7 @@ const OrderInfo = () => {
             }}
             onClick={contactCustomerService}
           >
-            联系客服
+            {"催一下：)"}
           </Button>
         </View>
       </View>
@@ -475,7 +424,7 @@ const OrderInfo = () => {
             }}
             onClick={contactCourier}
           >
-            联系骑手
+            给个好评
           </Button>
         </Dialog.Actions>
       </Dialog>

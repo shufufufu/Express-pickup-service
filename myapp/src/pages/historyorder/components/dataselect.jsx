@@ -8,7 +8,7 @@ function formatDateRange(dates) {
   if (dates.length === 2) {
     const start = dates[0].toLocaleDateString()
     const end = dates[1].toLocaleDateString()
-    return `下为从 ${start} 到 ${end} 的时间内的历史订单`
+    return `${start} 到 ${end} 内的历史订单`
   }
   return ''
 }
@@ -65,6 +65,7 @@ function DateRangeSelector() {
         </View>
       {/* 日历组件，限制日期范围 */}
       <Calendar
+        style={{ "--calendar-active-color": "#00668c" }}
         type="range"
         value={value}
         poppable
