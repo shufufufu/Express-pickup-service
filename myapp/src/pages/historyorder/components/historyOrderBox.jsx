@@ -1,22 +1,22 @@
 import { View, Text, Image } from "@tarojs/components";
-import {  Toast } from "@taroify/core"
-import React ,{ useState }from "react";
+import { Toast } from "@taroify/core";
+import React, { useState } from "react";
 import { Arrow } from "@taroify/icons";
 import Taro from "@tarojs/taro";
 import orderPic from "../../../assets/orderpic.jpg";
 
 const HistoryOrderBox = (props) => {
-
-  const [open, setOpen] = useState(false)
-
+  const [open, setOpen] = useState(false);
 
   const navigateToHistoryOrderDetail = () => {
     // 准备要传递的参数
-    const { expressid, dromadd , orderTime} = props.data;
-    
+    const { expressid, dromadd, orderTime } = props.data;
+
     // 导航到订单详情页面
     Taro.navigateTo({
-      url: `/pages/historyorderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&ordertime=${orderTime}`,
+      url: `/pages/historyorderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(
+        dromadd
+      )}&ordertime=${orderTime}`,
     });
   };
 
@@ -25,21 +25,17 @@ const HistoryOrderBox = (props) => {
     Taro.navigateTo({
       url: "/pages/feedback/index",
     });
-  }
+  };
 
   const navigateTodeliver = () => {
-    // 导航到反馈页面
+    // 导航到提交页面
     Taro.switchTab({
       url: "/pages/deliver/index",
     });
-  }
-
+  };
 
   return (
-    <View 
-    className="px-2 pt-2"
-    onClick={navigateToHistoryOrderDetail}
-    >
+    <View className="px-2 pt-2" onClick={navigateToHistoryOrderDetail}>
       <Toast open={open} onClose={setOpen}>
         暂不支持
       </Toast>
@@ -48,7 +44,9 @@ const HistoryOrderBox = (props) => {
         <View className="flex justify-between">
           <View>
             <View className="text-lg">普通快递</View>
-            <View className="text-gray-400 text-sm mt-1">2023-08-22 10:00:00</View>
+            <View className="text-gray-400 text-sm mt-1">
+              2023-08-22 10:00:00
+            </View>
           </View>
           <View className="flex items-center text-gray-400 text-sm mb-auto mt-1">
             已完成
@@ -75,25 +73,33 @@ const HistoryOrderBox = (props) => {
         </View>
         {/* 按钮 */}
         <View className="mt-4 flex justify-end gap-2 mr-2">
-          <View 
+          <View
             onClick={(e) => {
               e.stopPropagation(); // 阻止事件冒泡
               setOpen(true);
             }}
-          className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm"
-          >开发票</View>
-          <View 
-          onClick={(e) => {
-            e.stopPropagation(); // 阻止事件冒泡
-            navigateToFeedBack();
-          }}
-          className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm">评价一下</View>
-          <View 
-          onClick={(e) => {
-            e.stopPropagation(); // 阻止事件冒泡
-            navigateTodeliver();
-          }}
-          className="px-4 py-1 bg-black text-white text-sm rounded-sm">再来一单</View>
+            className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm"
+          >
+            开发票
+          </View>
+          <View
+            onClick={(e) => {
+              e.stopPropagation(); // 阻止事件冒泡
+              navigateToFeedBack();
+            }}
+            className="px-4 py-1 border border-gray-400 text-gray-600 text-sm rounded-sm"
+          >
+            评价一下
+          </View>
+          <View
+            onClick={(e) => {
+              e.stopPropagation(); // 阻止事件冒泡
+              navigateTodeliver();
+            }}
+            className="px-4 py-1 bg-black text-white text-sm rounded-sm"
+          >
+            再来一单
+          </View>
         </View>
       </View>
     </View>

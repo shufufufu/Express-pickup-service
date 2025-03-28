@@ -87,6 +87,20 @@ const HistoryOrderInfo = () => {
     );
   }
 
+  const navigateToFeedBack = () => {
+    // 导航到反馈页面
+    Taro.navigateTo({
+      url: "/pages/feedback/index",
+    });
+  };
+
+  const navigateTodeliver = () => {
+    // 导航到提交页面
+    Taro.switchTab({
+      url: "/pages/deliver/index",
+    });
+  };
+
   return (
     <View>
       {/* 顶部：navbar */}
@@ -115,10 +129,16 @@ const HistoryOrderInfo = () => {
               感谢您信任我们，期待您下次光临
             </View>
             <View className="flex space-x-2 mt-6 gap-2">
-              <View className="border border-[#00668c] text-[#00668c] py-2 px-4 rounded-sm text-sm">
+              <View
+                className="border border-[#00668c] text-[#00668c] py-2 px-4 rounded-sm text-sm"
+                onClick={navigateToFeedBack}
+              >
                 评价一下
               </View>
-              <View className="border border-[#00668c] text-[#00668c] py-2 px-4 rounded-sm text-sm">
+              <View
+                className="border border-[#00668c] text-[#00668c] py-2 px-4 rounded-sm text-sm"
+                onClick={navigateTodeliver}
+              >
                 再来一单
               </View>
             </View>
