@@ -6,8 +6,9 @@ import Taro from '@tarojs/taro'
  */
 export function checkLoginStatus() {
   const token = Taro.getStorageSync('token')
+  const userId = Taro.getStorageSync('userId')
   const userInfo = Taro.getStorageSync('userInfo')
-  return !!token && !!userInfo
+  return !!token && !!userInfo && !!userId
 }
 
 /**
@@ -27,12 +28,23 @@ export function getToken() {
 }
 
 /**
+ * 获取授权userId
+ * @returns {string|null} userId或null
+ */
+export function getUserId() {
+  return Taro.getStorageSync('userId') || null
+}
+
+
+/**
  * 保存登录信息
  * @param {string} token 登录token
+ * @param {string} id 用户ID
  * @param {Object} user 用户信息
  */
-export function saveLoginInfo(token, user) {
+export function saveLoginInfo(token, id, user) {
   Taro.setStorageSync('token', token)
+  Taro.setStorageSync('userId', id)
   Taro.setStorageSync('userInfo', user)
 }
 
@@ -41,6 +53,7 @@ export function saveLoginInfo(token, user) {
  */
 export function clearLoginInfo() {
   Taro.removeStorageSync('token')
+  Taro.removeStorageSync('userId')
   Taro.removeStorageSync('userInfo')
 }
 
@@ -56,4 +69,4 @@ export function logout(redirect = true) {
       url: '/pages/login/index'
     })
   }
-} 
+}

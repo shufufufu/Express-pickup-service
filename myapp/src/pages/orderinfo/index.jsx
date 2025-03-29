@@ -29,48 +29,42 @@ const OrderInfo = () => {
   useEffect(() => {
     // 获取路由参数
     const params = getCurrentInstance().router.params;
-    const { id, expressid, dromadd, stepstate, downtime, ordertime } = params;
+    const { orderId, expressId, dromAdd, stepState, downTime, orderTime,iphoneNumber,image ,comment } = params;
     
     // 模拟从服务器获取数据
     setTimeout(() => {
       // 模拟订单详情数据
       const mockOrderData = {
-        id: id || "XD" + Math.floor(Math.random() * 100000),
-        expressid: expressid || "107-5-207", // 快递取件码
-        dromadd: decodeURIComponent(dromadd || "南湖五栋207"), // 宿舍地址
-        phone: "150****8888", // 联系电话
-        submitTime: dayjs(Number(ordertime)).format('YYYY-MM-DD HH:mm:ss'), // 提交时间
-        estimatedArrival: parseInt(stepstate) >= STEP_STATES.STEP1.ACCEPTED ? "2023-07-10 18:30" : "--", // 预计送达时间
-        stepstate: parseInt(stepstate || 0), // 步骤状态
+        orderId: orderId || "XD" + Math.floor(Math.random() * 100000),
+        expressId: expressId || "107-5-207", // 快递取件码
+        dromAdd: decodeURIComponent(dromAdd || "南湖五栋207"), // 宿舍地址
+        phone: iphoneNumber || "150****8888", // 联系电话
+        submitTime: dayjs(Number(orderTime)).format('YYYY-MM-DD HH:mm:ss'), // 提交时间
+        estimatedArrival: parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? "2023-07-10 18:30" : "--", // 预计送达时间
+        stepState: parseInt(stepState || 0), // 步骤状态
         statusHistory: [ // 状态历史记录
           { status: "已提交", time: "2023-07-10 15:30", desc: "您的订单已成功提交" },
-          parseInt(stepstate) >= STEP_STATES.STEP1.ACCEPTED ? 
+          parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? 
             { status: "已接单", time: "2023-07-10 15:45", desc: "骑手已接单，即将为您取件" } : null,
-          parseInt(stepstate) >= STEP_STATES.STEP2.PICKING ? 
+          parseInt(stepState) >= STEP_STATES.STEP2.PICKING ? 
             { status: "取件中", time: "2023-07-10 16:15", desc: "骑手正在前往取件" } : null,
-          parseInt(stepstate) >= STEP_STATES.STEP2.SUCCESS ? 
+          parseInt(stepState) >= STEP_STATES.STEP2.SUCCESS ? 
             { status: "已取件", time: "2023-07-10 16:30", desc: "骑手已成功取件" } : null,
-          parseInt(stepstate) >= STEP_STATES.STEP3.DELIVERING ? 
+          parseInt(stepState) >= STEP_STATES.STEP3.DELIVERING ? 
             { status: "配送中", time: "2023-07-10 16:45", desc: "快递正在配送中" } : null,
-          parseInt(stepstate) >= STEP_STATES.STEP3.DELIVERED ? 
+          parseInt(stepState) >= STEP_STATES.STEP3.DELIVERED ? 
             { status: "已送达", time: "2023-07-10 17:30", desc: "快递已送达，感谢您的使用" } : null,
         ].filter(Boolean),
-        imageUrl: "https://img.yzcdn.cn/vant/cat.jpeg", // 取件截图
-        packageInfo: { // 包裹信息
-          source: "菜鸟驿站",
-          weight: "0.5kg",
-          type: "日用品",
-          size: "小型包裹"
-        },
-        downtime: parseInt(downtime || 3600000), // 倒计时
-        comment: "请轻拿轻放，易碎物品", // 备注
+        imageUrl: image || "https://img.yzcdn.cn/vant/cat.jpeg", // 取件截图
+        downTime: parseInt(downTime || 3600000), // 倒计时
+        comment: comment || "请轻拿轻放，易碎物品", // 备注
         payment: { // 支付信息
           amount: "3.00",
           method: "微信支付",
           time: "2023-07-10 15:31",
           status: "已支付"
         },
-        courierInfo: parseInt(stepstate) >= STEP_STATES.STEP1.ACCEPTED ? courierInfo : null
+        courierInfo: parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? courierInfo : null
       };
       
       setOrderInfo(mockOrderData);
@@ -155,10 +149,10 @@ const OrderInfo = () => {
   
   // 复制订单号
   const copyOrderId = () => {
-    if (!orderInfo?.id) return;
+    if (!orderInfo?.orderId) return;
     
     Taro.setClipboardData({
-      data: orderInfo.id,
+      data: orderInfo.orderId,
       showToast: false // 禁用默认的复制提示
     }).then(() => {
       showToast("订单号已复制", "success");
@@ -188,26 +182,26 @@ const OrderInfo = () => {
           borderRadius: "12px"
         }}>
           <View className="flex items-center mb-3">
-            <Tag color={getStatusColor(orderInfo.stepstate)} className="mr-2 h-6">
-              {getStatusText(orderInfo.stepstate)}
+            <Tag color={getStatusColor(orderInfo.stepState)} className="mr-2 h-6">
+              {getStatusText(orderInfo.stepState)}
             </Tag>
             <Text className="text-lg font-medium text-gray-800">
-              {getStatusDescription(orderInfo.stepstate)}
+              {getStatusDescription(orderInfo.stepState)}
             </Text>
           </View>
           
-          {orderInfo.stepstate === STEP_STATES.STEP1.WAITING && (
+          {orderInfo.stepState === STEP_STATES.STEP1.WAITING && (
             <View className="bg-white bg-opacity-70 p-3 rounded-lg">
               <View className="flex items-center">
                 <ClockOutlined className="mr-2 text-gray-600" />
                 <Text className="text-sm text-gray-700">
-                  订单将在 <Text className="text-red-500 font-medium">{formatTime(orderInfo.downtime)}</Text> 后自动取消
+                  订单将在 <Text className="text-red-500 font-medium">{formatTime(orderInfo.downTime)}</Text> 后自动取消
                 </Text>
               </View>
             </View>
           )}
           
-          {orderInfo.stepstate >= STEP_STATES.STEP1.ACCEPTED && orderInfo.stepstate < STEP_STATES.STEP3.DELIVERED && (
+          {orderInfo.stepState >= STEP_STATES.STEP1.ACCEPTED && orderInfo.stepState < STEP_STATES.STEP3.DELIVERED && (
             <View className="bg-white bg-opacity-70 p-3 rounded-lg mt-2">
               <View className="flex items-center">
                 <ClockOutlined className="mr-2 text-blue-600" />
@@ -223,7 +217,7 @@ const OrderInfo = () => {
       {/* 步骤进度 */}
       <View className="mx-4 mt-4 bg-white rounded-xl p-4">
         <Text className="text-base font-medium mb-2">订单进度</Text>
-        <CustomSteps status={orderInfo.stepstate} mode = {2}/>
+        <CustomSteps status={orderInfo.stepState} mode = {2}/>
       </View>
       
       {/* 派送员信息 */}
@@ -264,10 +258,10 @@ const OrderInfo = () => {
         <Cell.Group>
           <Cell title="取件信息" icon={<PhotoOutlined />} />
           <Cell title="取件码">
-            <View className="font-medium text-lg">{orderInfo.expressid}</View>
+            <View className="font-medium text-lg">{orderInfo.expressId}</View>
           </Cell>
           <Cell title="地址" icon={<LocationOutlined />}>
-            <View className="text-right">{orderInfo.dromadd}</View>
+            <View className="text-right">{orderInfo.dromAdd}</View>
           </Cell>
           <Cell title="联系电话" icon={<PhoneOutlined />}>
             <View className="text-right">{orderInfo.phone}</View>

@@ -24,7 +24,7 @@ const testStatusSequence = [
 
 const OrderBox = (props) => {
   // 使用本地状态存储当前状态的索引
-  const [statusIndex, setStatusIndex] = useState(props.data.stepstate);
+  const [statusIndex, setStatusIndex] = useState(props.data.status);
   const currentStatus = testStatusSequence[statusIndex];
 
   // 获取当前状态的描述
@@ -61,11 +61,22 @@ const OrderBox = (props) => {
   // 处理卡片点击，跳转到订单详情
   const navigateToOrderDetail = () => {
     // 准备要传递的参数
-    const { expressid, dromadd, downtime , orderTime } = props.data;
+    const { expressId, dormAdd, downtime , createTime,image, deliverId,iphoneNumber,comment,id } = props.data;
     
     // 导航到订单详情页面
     Taro.navigateTo({
-      url: `/pages/orderinfo/index?id=${expressid}&expressid=${expressid}&dromadd=${encodeURIComponent(dromadd)}&stepstate=${currentStatus}&downtime=${downtime}&ordertime=${orderTime}`
+      url: `/pages/orderinfo/index?` + 
+      `id=${expressId}` +
+      `&expressId=${expressId}` +
+      `&dormAdd=${encodeURIComponent(dormAdd)}` +
+      `&stepState=${currentStatus}` +
+      `&downTime=${downtime}` +
+      `&orderTime=${createTime}` +
+      `&image=${image}` +
+      `&deliverId=${deliverId}` +
+      `&iphoneNumber=${iphoneNumber}`+ 
+      `&comment=${encodeURIComponent(comment)}` +
+      `&orderId=${id}`
     });
   };
 
@@ -77,7 +88,7 @@ const OrderBox = (props) => {
     >
       <View className="flex justify-between items-center">
         <View className="text-2xl font-medium text-[#3b3c3d]">
-          {props.data.expressid}
+          {props.data.expressId}
         </View>
         <View
           className="px-3 py-1 bg-white/20 rounded-full text-[#3b3c3d] text-sm cursor-pointer active:bg-white/30"
@@ -86,7 +97,7 @@ const OrderBox = (props) => {
           测试: {getStatusDesc()}
         </View>
       </View>
-      <View className="mt-2 text-[#3b3c3d]">{props.data.dromadd}</View>
+      <View className="mt-2 text-[#3b3c3d]">{props.data.dormAdd}</View>
 
       {/* 倒计时容器 - 固定高度 */}
       <View className="h-[40px] flex items-center mt-3">

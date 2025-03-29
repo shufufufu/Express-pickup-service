@@ -1,6 +1,6 @@
 import Taro from "@tarojs/taro";
 
-const baseUrl = "https://your-backend-url.com";
+const baseUrl = "http://26.81.202.205:8080";
 
 export const fetchLogin = async (code) => {
   try {
@@ -10,7 +10,9 @@ export const fetchLogin = async (code) => {
       data: { code }, // 将 code 传给后端
       header: { "Content-Type": "application/json" },
     });
-    const { token, id } = response.data;
+    console.log("完整响应数据:", response.data.data);
+    console.log("完整响应数据的id:", response.data.data.id);
+    const { id, token } = response.data.data;
     if (token && id) {
       console.log("登录成功！", { token, id });
       return { token, id };

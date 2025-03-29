@@ -7,59 +7,12 @@ import { VolumeOutlined } from "@taroify/icons"; // 需要正确引入图标
 import { checkLoginStatus } from '../../utils/auth'; // 更新导入路径
 import LoginPopup from '../../components/LoginPopup';
 import Taro from '@tarojs/taro';
+import { fetchOrder } from '../../apis';
 
 
 const oneDay = 24 * 60 * 60 * 1000; // 一天的毫秒数
 
-// 模拟后端返回的订单数据，每个订单包含下单时间 orderTime（时间戳）
-const initialData = [
-  {
-    expressid: "107-5-207",
-    dromadd: "南湖五栋207",
-    orderTime: Date.now() - 1000 * 60 * 60, // 下单时间：1小时前
-    stepstate: 0,
-    comment: "",
-    iphoneNumber: "",
-    orderid: "",
-  },
-  {
-    expressid: "108-3-401",
-    dromadd: "南湖三栋401",
-    orderTime: Date.now() - 1000 * 60 * 30, // 下单时间：30分钟前
-    stepstate: 1,
-  },
-  {
-    expressid: "109-2-102",
-    dromadd: "南湖二栋102",
-    orderTime: Date.now() - 1000 * 60 * 10, // 下单时间：10分钟前
-    stepstate: 2,
-  },
-  {
-    expressid: "109-2-102",
-    dromadd: "南湖二栋102",
-    orderTime: Date.now() - 1000 * 60 * 10, // 下单时间：10分钟前
-    stepstate: 2,
-  },
-  {
-    expressid: "109-2-102",
-    dromadd: "南湖二栋102",
-    orderTime: Date.now() - 1000 * 60 * 10, // 下单时间：10分钟前
-    stepstate: 2,
-  },
-  {
-    expressid: "109-2-102",
-    dromadd: "南湖二栋102",
-    orderTime: Date.now() - 1000 * 60 * 10, // 下单时间：10分钟前
-    stepstate: 2,
-  },
-  {
-    expressid: "109-2-102",
-    dromadd: "南湖二栋102",
-    orderTime: Date.now() - 1000 * 60 * 10, // 下单时间：10分钟前
-    stepstate: 2,
-  },
-  // 其他订单数据...
-];
+
 
 export default function Order() {
   const [orderData, setOrderData] = useState([]);
@@ -70,15 +23,15 @@ export default function Order() {
   // 检测页面滚动
   usePageScroll(({ scrollTop }) => setReachTop(scrollTop === 0));
 
-  // 模拟从服务器获取数据，并计算剩余时间（倒计时）
+  // 从服务器获取数据，并计算剩余时间（倒计时）
   const handleRefresh = async () => {
     setLoading(true);
-
-    setTimeout(() => {
+    try {
+      const { data } = await fetchOrder();
       const now = Date.now();
-      const refreshedData = initialData.map((item) => {
+      const refreshedData = data.map((item) => {
         // 计算下单后经过的时间
-        const elapsed = now - item.orderTime;
+        const elapsed = now - item.createTime;
         // 剩余时间 = 24小时 - 已经过的时间（不处理订单过期的逻辑）
         const downtime = Math.max(0, oneDay - elapsed);
         return {
@@ -86,10 +39,12 @@ export default function Order() {
           downtime, // 传给 OrderBox 用于展示倒计时（单位：毫秒）
         };
       });
-
       setOrderData(refreshedData);
+    } catch (error) {
+      console.error('获取订单数据失败:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   useEffect(() => {

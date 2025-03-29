@@ -5,6 +5,7 @@ import { Popup, Toast, Dialog } from "@taroify/core";
 import { saveLoginInfo } from "../../utils/auth";
 import headpic from "../../assets/headpic2.png";
 import useAuthStore from "../../store/authStore";
+import { fetchLogin } from "../../apis/index";
 
 const LoginPopup = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);
