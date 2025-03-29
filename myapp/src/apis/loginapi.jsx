@@ -10,11 +10,8 @@ export const fetchLogin = async (code) => {
       data: { code }, // 将 code 传给后端
       header: { "Content-Type": "application/json" },
     });
-    console.log("完整响应数据:", response.data.data);
-    console.log("完整响应数据的id:", response.data.data.id);
     const { id, token } = response.data.data;
     if (token && id) {
-      console.log("登录成功！", { token, id });
       return { token, id };
     } else {
       throw new Error("后端返回的数据格式不正确");

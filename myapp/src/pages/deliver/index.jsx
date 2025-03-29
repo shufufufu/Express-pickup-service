@@ -5,6 +5,7 @@ import Taro from "@tarojs/taro";
 import LoginPopup from '../../components/LoginPopup';
 import useAuthStore from '../../store/authStore';
 import UnLogin from "../../assets/unlogin.png";
+import { fetchDeliver } from "../../apis";
 
 const Deliver = () => { 
   const [showToast, setShowToast] = useState(false);
@@ -35,7 +36,7 @@ const Deliver = () => {
   };
 
   // 表单提交处理（图片单独上传，其他数据以 JSON 提交）
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     const formData = event.detail.value;
     
     // 验证快递取件截图是否为空
@@ -44,44 +45,35 @@ const Deliver = () => {
       setShowToast(true);
       return;
     }
-    
-    // 先单独上传图片（不处理返回的 imageUrl，由后端自行关联）
-    Taro.uploadFile({
-      url: "https://your-image-upload.com/upload", // 替换为你的图片上传接口地址
-      filePath: files[0].url,           // 小程序本地临时文件路径
-      name: "Image",                    // 后端接收图片的字段名
-      // 图片上传成功与否不影响表单数据的提交
-      success: (uploadRes) => {
-        console.log("图片上传成功:", uploadRes);
-      },
-      fail: (uploadErr) => {
-        console.error("图片上传失败:", uploadErr);
-        Taro.showToast({
-          title: "图片上传失败:" + uploadErr.errMsg,
-          icon: "none"
-        });
+
+    try {
+      // 构造订单数据
+      const orderData = {
+        expressId: formData.expressId,
+        dormAdd: formData.dromAdd,
+        iphoneNumber: formData.PhoneNumber,
+        comment: formData.comment || '无备注'
+      };
+
+      // 调用fetchDeliver API提交订单
+      await fetchDeliver(orderData);
+      
+      // 提交成功后的处理
+      setToastMessage("订单提交成功");
+      setShowToast(true);
+      
+      // 重置表单
+      if (formRef.current) {
+        formRef.current.reset();
       }
-    });
-    
-    // 再提交其他表单数据（JSON 格式，不包含图片信息）
-    Taro.request({
-      url: "https://example.com/submit", // 替换为你的表单数据提交接口地址
-      method: "POST",
-      header: {
-        "Content-Type": "application/json"
-      },
-      data: formData,
-      success: (res) => {
-        console.log("表单提交成功:", res.data);
-        setToastMessage("提交成功：" + res.data);
-        setShowToast(true);
-      },
-      fail: (err) => {
-        console.error("表单提交失败:", err);
-        setToastMessage("提交失败：" + err.errMsg);
-        setShowToast(true);
-      }
-    });
+      setFiles([]);
+      updateCurrentTime();
+
+    } catch (error) {
+      console.error("订单提交失败:", error);
+      setToastMessage("订单提交失败，请重试");
+      setShowToast(true);
+    }
     
     // 隔一段时间自动关闭 Toast
     setTimeout(() => {
@@ -206,13 +198,13 @@ const Deliver = () => {
           </Toast>
           
           <Cell.Group inset>
-            <Field label="取件码" name="expressid" rules={[{ required: true, message: "请填写取件码" }]}>
+            <Field label="取件码" name="expressId" rules={[{ required: true, message: "请填写取件码" }]}>
               <Input placeholder="取件码" />
             </Field>
-            <Field label="地址" name="dromadd" rules={[{ required: true, message: "请填写地址" }]}>
+            <Field label="地址" name="dromAdd" rules={[{ required: true, message: "请填写地址" }]}>
               <Input placeholder="地址" />
             </Field>
-            <Field label="电话号码" name="Phonenumber" rules={[{ required: true, message: "请填写电话号码" }]}>
+            <Field label="电话号码" name="PhoneNumber" rules={[{ required: true, message: "请填写电话号码" }]}>
               <Input placeholder="电话号码" />
             </Field>
             <Field label="备注" name="comment" rules={[{ required: false, message: "请填写备注" }]}>

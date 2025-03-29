@@ -11,9 +11,7 @@ export const fetchOrder = async () => {
       header: { "Content-Type": "application/json" },
     });
     const { data } = response.data;
-    console.log("获取订单数据为：",  response.data );
     if (data) {
-      console.log("获取订单成功！", { data });
       return { data };
     } else {
       throw new Error("后端返回的数据格式不正确");

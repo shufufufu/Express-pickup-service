@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View } from "@tarojs/components";
 import { Cell, Field, Textarea, Button, Toast } from "@taroify/core";
 import { getEnv, navigateBack } from "@tarojs/taro";
+import { fetchFeedback } from "../../apis/index";
 
 const env = getEnv();
 
@@ -20,7 +21,7 @@ function FeedBack() {
   };
 
   // 处理表单提交
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (feedback.trim() === "") {
       setToastMessage("请输入反馈内容");
       setShowToast(true);
@@ -34,21 +35,27 @@ function FeedBack() {
       return;
     }
 
-    // 这里可以添加后端提交逻辑
-    console.log("提交的反馈:", feedback);
+    try {
+      // 调用反馈API
+      await fetchFeedback(feedback);
 
-    // 只有在提交成功后，才显示感谢提示
-    wx.setStorageSync("lastSubmitTime", now);
-    setToastMessage("感谢您的反馈！");
-    setShowToast(true);
+      // 提交成功后，更新本地存储和UI
+      wx.setStorageSync("lastSubmitTime", now);
+      setToastMessage("感谢您的反馈！");
+      setShowToast(true);
 
-    // 清空输入框
-    setFeedback("");
+      // 清空输入框
+      setFeedback("");
 
-    // 延迟返回上一页
-    setTimeout(() => {
-      navigateBack();
-    }, 1500);
+      // 延迟返回上一页
+      setTimeout(() => {
+        navigateBack();
+      }, 1500);
+    } catch (error) {
+      console.error("提交反馈失败:", error);
+      setToastMessage("提交失败，请稍后重试");
+      setShowToast(true);
+    }
   };
 
   return (
