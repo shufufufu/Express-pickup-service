@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Taro from '@tarojs/taro';
 import headpic from "../../assets/headpic2.png";
 import { Arrow, Edit } from "@taroify/icons";
+import { getUserId } from "../../utils/auth";
 
 // 格式化手机号：显示前3位和后4位，中间用星号代替
 const formatPhone = (phone) => {
@@ -37,6 +38,9 @@ export default function ChangeInfo() {
   const [ageValue, setAgeValue] = useState("");
   const [openGenderPicker, setOpenGenderPicker] = useState(false);
   const [genderValue, setGenderValue] = useState("");
+
+  // 用户ID
+  const userId = getUserId();
 
   // 生成年龄选项，从16岁到70岁
   const ageColumns = useMemo(() => {
@@ -189,7 +193,7 @@ export default function ChangeInfo() {
         <View className="flex justify-between items-center px-4 py-4">
           <Text className="text-gray-600">用户ID</Text>
           <View className="flex items-center">
-            <Text>{userInfo.userId || '未设置'}</Text>
+            <Text>{userId || '未设置'}</Text>
             <View 
               className="ml-2 border border-[#b6ccd8] text-[#b6ccd8] px-2 py-0.5 rounded text-xs"
               onClick={handleCopyUserId}
