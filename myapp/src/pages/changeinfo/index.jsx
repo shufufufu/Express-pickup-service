@@ -5,26 +5,27 @@ import Taro from '@tarojs/taro';
 import headpic from "../../assets/headpic2.png";
 import { Arrow, Edit } from "@taroify/icons";
 import { getUserId } from "../../utils/auth";
+import { fetchGetPersonInfo, fetchChangePersonInfo } from "../../apis";
 
 // 格式化手机号：显示前3位和后4位，中间用星号代替
-const formatPhone = (phone) => {
-  if (!phone || phone.length < 7) return phone;
-  return `${phone.substring(0, 3)}****${phone.substring(phone.length - 4)}`;
+const formatPhone = (iphone) => {
+  if (!iphone || iphone.length < 7) return iphone;
+  return `${iphone.substring(0, 3)}****${iphone.substring(iphone.length - 4)}`;
 };
 
 // 电话号码校验函数：允许为空，否则必须是以 1 开头的11位数字
-const validatePhoneNumber = (phone) => {
-  if (!phone) return true;
+const validatePhoneNumber = (iphone) => {
+  if (!iphone) return true;
   const pattern = /^1\d{10}$/;
-  return pattern.test(phone);
+  return pattern.test(iphone);
 };
 
 export default function ChangeInfo() {
   // 本地存储的用户信息（头像、昵称等）
   const storedUserInfo = Taro.getStorageSync('userInfo') || {};
   const [userInfo, setUserInfo] = useState(storedUserInfo);
-  // 从后端获取的用户信息（年龄、性别、电话）
-  const [userInfoBack, setUserInfoBack] = useState({ age: '', gender: '', phone: '' });
+  // 从后端获取的用户信息（年龄、性别、电话、头像、昵称）
+  const [userInfoBack, setUserInfoBack] = useState({ age: '', gender: '', iphone: '', avatarUrl: '', userName: '' });
   
   // 编辑时的临时数据
   const [editedUserInfo, setEditedUserInfo] = useState(userInfo);
@@ -58,11 +59,25 @@ export default function ChangeInfo() {
     { label: "其他", value: "其他" },
   ], []);
 
-  // 模拟加载后端数据（可替换为实际 API 调用）
+  // 加载后端数据
   useEffect(() => {
-    const backendData = { age: '25', gender: '男', phone: '13800138000' };
-    setUserInfoBack(backendData);
-    setEditedUserInfoBack(backendData);
+    fetchGetPersonInfo().then(({ data }) => {
+      setUserInfoBack(data);
+      setEditedUserInfoBack(data);
+      // 更新用户信息，优先使用后端数据
+      setUserInfo(prev => ({
+        ...prev,
+        avatarUrl: data.avatarUrl || prev.avatarUrl,
+        userName: data.userName || prev.userName
+      }));
+      setEditedUserInfo(prev => ({
+        ...prev,
+        avatarUrl: data.avatarUrl || prev.avatarUrl,
+        userName: data.userName || prev.userName
+      }));
+    }).catch(error => {
+      console.error('获取后端个人信息失败:', error);
+    });
   }, []);
 
   // 修改头像（使用图片选择器）
@@ -79,7 +94,7 @@ export default function ChangeInfo() {
 
   // 修改昵称时处理输入
   const handleNickNameChange = (e) => {
-    setEditedUserInfo(prev => ({ ...prev, nickName: e.detail.value }));
+    setEditedUserInfo(prev => ({ ...prev, userName: e.detail.value }));
     setModified(true);
   };
 
@@ -98,9 +113,9 @@ export default function ChangeInfo() {
   };
 
   // 点击保存按钮，提交修改
-  const handleSave = () => {
+  const handleSave = async () => {
     // 电话号码校验：为空或合法才允许保存
-    if (!validatePhoneNumber(editedUserInfoBack.phone)) {
+    if (!validatePhoneNumber(editedUserInfoBack.iphone)) {
       Taro.showToast({
         title: '请输入正确的电话号码',
         icon: 'none',
@@ -108,14 +123,30 @@ export default function ChangeInfo() {
       });
       return;
     }
-    // 保存头像和昵称到本地存储
-    Taro.setStorageSync('userInfo', editedUserInfo);
-    setUserInfo(editedUserInfo);
-    
-    // 模拟后端更新（年龄、性别、手机号）
-    Taro.showToast({ title: '修改成功', icon: 'success', duration: 2000 });
-    setUserInfoBack(editedUserInfoBack);
-    setModified(false);
+
+    try {
+      // 调用后端接口更新用户信息
+      await fetchChangePersonInfo({
+        userName: editedUserInfo.userName,
+        age: editedUserInfoBack.age,
+        gender: editedUserInfoBack.gender,
+        iphone: editedUserInfoBack.iphone
+      });
+
+      // 更新状态
+      setUserInfo(editedUserInfo);
+      setUserInfoBack(editedUserInfoBack);
+      setModified(false);
+
+      Taro.showToast({ title: '修改成功', icon: 'success', duration: 2000 });
+    } catch (error) {
+      console.error('保存个人信息失败:', error);
+      Taro.showToast({
+        title: '保存失败，请稍后重试',
+        icon: 'error',
+        duration: 2000
+      });
+    }
   };
 
   return (
@@ -142,7 +173,7 @@ export default function ChangeInfo() {
           <Text className="text-gray-600">昵称</Text>
           <View className="flex items-center">
             <Input 
-              value={editedUserInfo.nickName}
+              value={editedUserInfo.userName}
               placeholder="请输入昵称"
               onInput={handleNickNameChange}
               className="text-right"
@@ -180,9 +211,9 @@ export default function ChangeInfo() {
           <Text className="text-gray-600">手机号</Text>
           <View className="flex items-center">
             <Input 
-              value={editedUserInfoBack.phone}
+              value={editedUserInfoBack.iphone}
               placeholder="未设置"
-              onInput={(e) => handleBackFieldChange('phone', e.detail.value)}
+              onInput={(e) => handleBackFieldChange('iphone', e.detail.value)}
               className="text-right"
             />
             <Arrow className="ml-2" />

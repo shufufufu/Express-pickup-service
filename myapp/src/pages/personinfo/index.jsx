@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { clearLoginInfo } from '../../utils/auth';
 import LoginPopup from '../../components/LoginPopup';
 import useAuthStore from '../../store/authStore';
+import { fetchGetPersonInfo } from '../../apis';
 
 export default function personinfo () {
   const [userInfo, setUserInfo] = useState(null);
@@ -20,7 +21,18 @@ export default function personinfo () {
     // 检查登录状态，获取用户信息
     if (!needLogin) {
       const storedUserInfo = Taro.getStorageSync('userInfo');
-      setUserInfo(storedUserInfo);
+      // 获取后端个人信息
+      fetchGetPersonInfo().then(({ data }) => {
+        // 合并后端数据和本地数据，优先使用后端数据
+        setUserInfo({
+          ...storedUserInfo,
+          avatarUrl: data.avatarUrl || storedUserInfo.avatarUrl,
+          nickName: data.userName || storedUserInfo.nickName
+        });
+      }).catch(error => {
+        console.error('获取后端个人信息失败:', error);
+        setUserInfo(storedUserInfo);
+      });
     } else {
       // 未登录则显示登录弹窗
       setTimeout(() => {

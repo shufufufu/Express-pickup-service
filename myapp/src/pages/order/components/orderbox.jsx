@@ -61,7 +61,7 @@ const OrderBox = (props) => {
   // 处理卡片点击，跳转到订单详情
   const navigateToOrderDetail = () => {
     // 准备要传递的参数
-    const { expressId, dormAdd, downtime , createTime,image, deliverId,iphoneNumber,comment,id } = props.data;
+    const { expressId, dormAdd, downTime , createTime,image, deliverId,iphoneNumber,comment,id } = props.data;
     
     // 导航到订单详情页面
     Taro.navigateTo({
@@ -70,7 +70,7 @@ const OrderBox = (props) => {
       `&expressId=${expressId}` +
       `&dormAdd=${encodeURIComponent(dormAdd)}` +
       `&stepState=${currentStatus}` +
-      `&downTime=${downtime}` +
+      `&downTime=${downTime}` +
       `&orderTime=${createTime}` +
       `&image=${image}` +
       `&deliverId=${deliverId}` +
@@ -104,7 +104,7 @@ const OrderBox = (props) => {
         {currentStatus === STEP_STATES.STEP1.WAITING && (
           <>
             <View className="text-[#3b3c3d] text-sm mr-2">剩余时间</View>
-            <Countdown value={props.data.downtime}>
+            <Countdown value={props.data.downTime}>
               {(current) => (
                 <View className="flex items-center">
                   <View

@@ -1,22 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { View, Image, Text, ScrollView } from "@tarojs/components";
-import { Cell, Tag, Button, Avatar, NoticeBar, Loading, Divider, SwipeCell, Dialog, Toast } from "@taroify/core";
-import { Arrow, LocationOutlined, ClockOutlined, PhotoOutlined, PhoneOutlined, CommentOutlined, StarOutlined, ManagerOutlined, BillOutlined } from "@taroify/icons";
+import { Cell, Tag, Button, Avatar, Loading, Divider, SwipeCell, Dialog, Toast } from "@taroify/core";
+import { LocationOutlined, ClockOutlined, PhotoOutlined, PhoneOutlined, CommentOutlined, StarOutlined, ManagerOutlined, BillOutlined } from "@taroify/icons";
 import Taro, { getCurrentInstance } from "@tarojs/taro";
 import CustomSteps from "../order/components/Steps";
 import { STEP_STATES } from "../order/components/Steps";
 import dayjs from 'dayjs';
 import rider from "../../assets/rider.png";
+import { fetchRider } from "../../apis";
 
-// 模拟快递员数据
-const courierInfo = {
-  name: "张师傅",
-  avatar: rider,
-  phone: "138****6789",
-  rating: 5.0,
-  deliveryCount: 1024,
-  joinDate: "2022-01-01"
-};
+
 
 const OrderInfo = () => {
   const [orderInfo, setOrderInfo] = useState(null);
@@ -25,51 +18,72 @@ const OrderInfo = () => {
   const [toastOpen, setToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("text");
+  const [courierInfo, setCourierInfo] = useState(null);
   
   useEffect(() => {
     // 获取路由参数
     const params = getCurrentInstance().router.params;
-    const { orderId, expressId, dromAdd, stepState, downTime, orderTime,iphoneNumber,image ,comment } = params;
+    const { orderId, expressId, dromAdd, stepState, downTime, orderTime, iphoneNumber, image, comment, deliverId } = params;
     
-    // 模拟从服务器获取数据
-    setTimeout(() => {
-      // 模拟订单详情数据
-      const mockOrderData = {
-        orderId: orderId || "XD" + Math.floor(Math.random() * 100000),
-        expressId: expressId || "107-5-207", // 快递取件码
-        dromAdd: decodeURIComponent(dromAdd || "南湖五栋207"), // 宿舍地址
-        phone: iphoneNumber || "150****8888", // 联系电话
-        submitTime: dayjs(Number(orderTime)).format('YYYY-MM-DD HH:mm:ss'), // 提交时间
-        estimatedArrival: parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? "2023-07-10 18:30" : "--", // 预计送达时间
-        stepState: parseInt(stepState || 0), // 步骤状态
-        statusHistory: [ // 状态历史记录
-          { status: "已提交", time: "2023-07-10 15:30", desc: "您的订单已成功提交" },
-          parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? 
-            { status: "已接单", time: "2023-07-10 15:45", desc: "骑手已接单，即将为您取件" } : null,
-          parseInt(stepState) >= STEP_STATES.STEP2.PICKING ? 
-            { status: "取件中", time: "2023-07-10 16:15", desc: "骑手正在前往取件" } : null,
-          parseInt(stepState) >= STEP_STATES.STEP2.SUCCESS ? 
-            { status: "已取件", time: "2023-07-10 16:30", desc: "骑手已成功取件" } : null,
-          parseInt(stepState) >= STEP_STATES.STEP3.DELIVERING ? 
-            { status: "配送中", time: "2023-07-10 16:45", desc: "快递正在配送中" } : null,
-          parseInt(stepState) >= STEP_STATES.STEP3.DELIVERED ? 
-            { status: "已送达", time: "2023-07-10 17:30", desc: "快递已送达，感谢您的使用" } : null,
-        ].filter(Boolean),
-        imageUrl: image || "https://img.yzcdn.cn/vant/cat.jpeg", // 取件截图
-        downTime: parseInt(downTime || 3600000), // 倒计时
-        comment: comment || "请轻拿轻放，易碎物品", // 备注
-        payment: { // 支付信息
-          amount: "3.00",
-          method: "微信支付",
-          time: "2023-07-10 15:31",
-          status: "已支付"
-        },
-        courierInfo: parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? courierInfo : null
-      };
-      
-      setOrderInfo(mockOrderData);
-      setLoading(false);
-    }, 800);
+    // 获取快递员信息
+    const getRiderInfo = async () => {
+      if (deliverId) {
+        try {
+          const { data } = await fetchRider(deliverId);
+          setCourierInfo(data);
+          // 更新 orderData 的 courierInfo
+          setOrderInfo(prevOrderInfo => ({
+            ...prevOrderInfo,
+            courierInfo: data
+          }));
+        } catch (error) {
+          console.error('获取快递员信息失败:', error);
+        }
+      }
+    };
+    
+    // 构造订单数据
+    const orderData = {
+      orderId: orderId,
+      expressId: expressId,
+      dromAdd: decodeURIComponent(dromAdd),
+      phone: iphoneNumber,
+      submitTime: dayjs(Number(orderTime)).format('YYYY-MM-DD HH:mm:ss'),
+      estimatedArrival: parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ? dayjs().add(3, 'hour').format('YYYY-MM-DD HH:mm') : '--',
+      stepState: parseInt(stepState || 0),
+      statusHistory: [
+        { status: '已提交', time: dayjs(Number(orderTime)).format('YYYY-MM-DD HH:mm:ss'), desc: '您的订单已成功提交' },
+        parseInt(stepState) >= STEP_STATES.STEP1.ACCEPTED ?
+          { status: '已接单', time: dayjs().subtract(15, 'minute').format('YYYY-MM-DD HH:mm:ss'), desc: '骑手已接单，即将为您取件' } : null,
+        parseInt(stepState) >= STEP_STATES.STEP2.PICKING ?
+          { status: '取件中', time: dayjs().subtract(10, 'minute').format('YYYY-MM-DD HH:mm:ss'), desc: '骑手正在前往取件' } : null,
+        parseInt(stepState) >= STEP_STATES.STEP2.SUCCESS ?
+          { status: '已取件', time: dayjs().subtract(5, 'minute').format('YYYY-MM-DD HH:mm:ss'), desc: '骑手已成功取件' } : null,
+        parseInt(stepState) >= STEP_STATES.STEP3.DELIVERING ?
+          { status: '配送中', time: dayjs().subtract(3, 'minute').format('YYYY-MM-DD HH:mm:ss'), desc: '快递正在配送中' } : null,
+        parseInt(stepState) >= STEP_STATES.STEP3.DELIVERED ?
+          { status: '已送达', time: dayjs().format('YYYY-MM-DD HH:mm:ss'), desc: '快递已送达，感谢您的使用' } : null,
+      ].filter(Boolean),
+      imageUrl: image || 'https://img.yzcdn.cn/vant/cat.jpeg',
+      downTime: parseInt(downTime || 3600000),
+      comment: comment || '请轻拿轻放，易碎物品',
+      payment: {
+        amount: '3.00',
+        method: '微信支付',
+        time: dayjs(Number(orderTime)).add(1, 'minute').format('YYYY-MM-DD HH:mm:ss'),
+        status: '已支付'
+      },
+      courierInfo: null
+    };
+
+    // 先设置订单的初始状态
+    setOrderInfo(orderData);
+    setLoading(false);
+
+    // 获取快递员信息并更新订单数据
+    if (deliverId) {
+      getRiderInfo();
+    }
   }, []);
 
   // 显示Toast
@@ -226,13 +240,13 @@ const OrderInfo = () => {
           <SwipeCell>
             <Cell>
               <View className="flex w-full py-2">
-                <Avatar src={orderInfo.courierInfo.avatar} size="large" />
+                <Avatar src={rider} size="large" />
                 <View className="ml-3 flex-1">
                   <View className="flex justify-between">
                     <Text className="font-medium">{orderInfo.courierInfo.name}</Text>
                     <View className="flex items-center">
                       <StarOutlined className="text-yellow-500 mr-1" />
-                      <Text className="text-yellow-500">{orderInfo.courierInfo.rating}</Text>
+                      <Text className="text-yellow-500">{orderInfo.courierInfo.favor}</Text>
                     </View>
                   </View>
                   <Text className="text-sm text-gray-500 mt-1">{orderInfo.courierInfo.phone}</Text>
@@ -382,13 +396,13 @@ const OrderInfo = () => {
           {orderInfo?.courierInfo && (
             <View className="p-4">
               <View className="flex justify-center mb-4">
-                <Avatar src={orderInfo.courierInfo.avatar} size="large" />
+                <Avatar src={rider} size="large" />
               </View>
               <View className="text-center mb-4">
                 <Text className="text-lg font-medium">{orderInfo.courierInfo.name}</Text>
                 <View className="flex items-center justify-center mt-1">
                   <StarOutlined className="text-yellow-500 mr-1" />
-                  <Text className="text-yellow-500">{orderInfo.courierInfo.rating}</Text>
+                  <Text className="text-yellow-500">{orderInfo.courierInfo.favor}</Text>
                 </View>
               </View>
               <View className="bg-gray-50 rounded-lg p-4">
@@ -398,11 +412,11 @@ const OrderInfo = () => {
                 </View>
                 <View className="flex justify-between mb-2">
                   <Text className="text-gray-500">配送单数</Text>
-                  <Text>{orderInfo.courierInfo.deliveryCount}单</Text>
+                  <Text>{orderInfo.courierInfo.doneNumber}单</Text>
                 </View>
                 <View className="flex justify-between">
                   <Text className="text-gray-500">加入时间</Text>
-                  <Text>{orderInfo.courierInfo.joinDate}</Text>
+                  <Text>{orderInfo.courierInfo.joinTime}</Text>
                 </View>
               </View>
             </View>
