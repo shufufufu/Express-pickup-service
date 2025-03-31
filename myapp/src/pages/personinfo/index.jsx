@@ -8,6 +8,7 @@ import { clearLoginInfo } from '../../utils/auth';
 import LoginPopup from '../../components/LoginPopup';
 import useAuthStore from '../../store/authStore';
 import { fetchGetPersonInfo } from '../../apis';
+import { useDidShow } from '@tarojs/taro';
 
 export default function personinfo () {
   const [userInfo, setUserInfo] = useState(null);
@@ -17,8 +18,8 @@ export default function personinfo () {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  useEffect(() => {
-    // 检查登录状态，获取用户信息
+  // 获取用户信息的函数
+  const fetchUserInfo = () => {
     if (!needLogin) {
       const storedUserInfo = Taro.getStorageSync('userInfo');
       // 获取后端个人信息
@@ -39,7 +40,16 @@ export default function personinfo () {
         setLoginPopupOpen(true);
       }, 500);
     }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
   }, [needLogin]); // 添加登录状态作为依赖项
+
+  // 页面显示时重新获取用户信息
+  useDidShow(() => {
+    fetchUserInfo();
+  });
   
   // 处理跳转到个人信息修改页面
   const handleNavigateToChangeInfo = () => {

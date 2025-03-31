@@ -24,11 +24,19 @@ export const fetchGetPersonInfo = async () => {
 
 
 export const fetchChangePersonInfo = async (data) => {
+  const {userName , age ,gender , iphone } = data;
+  const userId = getUserId();
   try {
     const response = await Taro.request({
       url: `${baseUrl}/user/updata/info`,
       method: "POST",
-      data: { ...data }, // 将 除头像外的信息 传给后端
+      data: {
+        id: Number(userId),
+        userName:String(userName),
+        age:Number(age),
+        gender:String(gender),
+        iphone:String(iphone),
+        }, // 将 除头像外的信息 传给后端
       header: { "Content-Type": "application/json" },
     });
     const { success } = response.data;

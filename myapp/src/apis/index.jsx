@@ -5,3 +5,5 @@ export { fetchDeliver } from "./deliverapi";
 export { fetchGetPersonInfo, fetchChangePersonInfo } from "./personinfoapi";
 export { fetchRider } from "./riderapi";
 export { fetchHistoryOrderInfo } from "./historyorderapi";
+export { fetchOrderImages } from "./orderimageapi";
+export { fetchUserImages } from "./userimageapi"

@@ -8,6 +8,7 @@ import { checkLoginStatus } from '../../utils/auth'; // 更新导入路径
 import LoginPopup from '../../components/LoginPopup';
 import Taro from '@tarojs/taro';
 import { fetchOrder } from '../../apis';
+import { useDidShow } from '@tarojs/taro';
 
 
 const oneDay = 24 * 60 * 60 * 1000; // 一天的毫秒数
@@ -54,6 +55,11 @@ export default function Order() {
     handleRefresh();
   }, []);
 
+  // 页面显示时重新获取订单数据
+  useDidShow(() => {
+    handleRefresh();
+  });
+
   // 检查是否需要显示登录弹窗
   const checkLoginOnMount = () => {
     const isLoggedIn = checkLoginStatus();
@@ -75,12 +81,18 @@ export default function Order() {
       handleRefresh();
     }
   };
+  const delayedRefresh = () => {
+    setLoading(true);
+    setTimeout(() => {
+      handleRefresh(); // 调用原来的刷新函数
+    }, 500); // 延迟 500ms
+  };
 
   return (
   <PullRefresh
         loading={loading}
         reachTop={reachTop}
-        onRefresh={handleRefresh}
+        onRefresh={delayedRefresh}
         loadingText="刷新中..."
         pullingText="下拉刷新"
         loosingText="释放刷新"

@@ -5,7 +5,7 @@ import Taro from '@tarojs/taro';
 import headpic from "../../assets/headpic2.png";
 import { Arrow, Edit } from "@taroify/icons";
 import { getUserId } from "../../utils/auth";
-import { fetchGetPersonInfo, fetchChangePersonInfo } from "../../apis";
+import { fetchGetPersonInfo, fetchChangePersonInfo,fetchUserImages } from "../../apis";
 
 // 格式化手机号：显示前3位和后4位，中间用星号代替
 const formatPhone = (iphone) => {
@@ -84,11 +84,18 @@ export default function ChangeInfo() {
   const handleEditAvatar = async () => {
     try {
       const res = await Taro.chooseImage({ count: 1 });
-      const newAvatar = res.tempFilePaths[0];
-      setEditedUserInfo(prev => ({ ...prev, avatarUrl: newAvatar }));
+      const tempFilePath = res.tempFilePaths[0];
+      
+      // 仅在本地预览头像
+      setEditedUserInfo(prev => ({ ...prev, avatarUrl: tempFilePath }));
       setModified(true);
     } catch (error) {
-      console.error('选择图片失败', error);
+      console.error('选择头像失败', error);
+      Taro.showToast({
+        title: error.message || '选择头像失败',
+        icon: 'error',
+        duration: 2000
+      });
     }
   };
 
@@ -125,16 +132,25 @@ export default function ChangeInfo() {
     }
 
     try {
+      let avatarUrl = editedUserInfo.avatarUrl;
+      
+      // 如果头像是本地临时文件路径，则先上传头像
+      if (avatarUrl && avatarUrl.startsWith('http://tmp/') || avatarUrl.startsWith('wxfile://')) {
+        const uploadResult = await fetchUserImages(avatarUrl);
+        avatarUrl = uploadResult.data.imageUrl;
+      }
+
       // 调用后端接口更新用户信息
       await fetchChangePersonInfo({
         userName: editedUserInfo.userName,
         age: editedUserInfoBack.age,
         gender: editedUserInfoBack.gender,
-        iphone: editedUserInfoBack.iphone
+        iphone: editedUserInfoBack.iphone,
+        avatarUrl: avatarUrl
       });
 
       // 更新状态
-      setUserInfo(editedUserInfo);
+      setUserInfo({ ...editedUserInfo, avatarUrl });
       setUserInfoBack(editedUserInfoBack);
       setModified(false);
 
