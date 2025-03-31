@@ -3,31 +3,25 @@ import { View } from "@tarojs/components";
 import { PullRefresh, Empty, BackTop, List, Loading } from "@taroify/core";
 import HistoryOrderBox from "./components/historyOrderBox";
 import Taro from "@tarojs/taro";
-import  DataSelect from "./components/dataselect"
+import DataSelect from "./components/dataselect";
+import { fetchHistoryOrderInfo } from "../../apis";
 
 const PAGE_SIZE = 5;
 const TOTAL_PAGES = 10;
 
-// 模拟请求数据
-const mockFetchData = (page) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (page > TOTAL_PAGES) {
-        resolve([]);
-        return;
-      }
-      const newData = Array.from({ length: PAGE_SIZE }, (_, i) => ({
-        expressid: `10${page}-5-${200 + i}`,
-        dromadd: `南湖${Math.floor(Math.random() * 10) + 1}栋${Math.floor(Math.random() * 400) + 100}`,
-        orderTime: Date.now() - Math.floor(Math.random() * 1000000000),
-        comment: `测试订单 ${page}-${i}`,
-        iphoneNumber: `188****${Math.floor(1000 + Math.random() * 9000)}`,
-        orderid: `${page}${200 + i}`,
-        orderImage: "",
-      }));
-      resolve(newData);
-    }, 500);
-  });
+const fetchData = async (page, beginTime, endTime) => {
+  try {
+    const { list } = await fetchHistoryOrderInfo({
+      page,
+      pageSize: PAGE_SIZE,
+      beginTime,
+      endTime,
+    });
+    return { list, hasMore: list.length === PAGE_SIZE };
+  } catch (error) {
+    console.error('获取历史订单失败:', error);
+    throw error;
+  }
 };
 
 function HistoryOrder() {
@@ -37,6 +31,8 @@ function HistoryOrder() {
   const [page, setPage] = useState(1);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(false);
+  const [beginTime, setbeginTime] = useState(null);
+  const [endTime, setEndTime] = useState(null);
 
   // 下拉刷新
   const handleRefresh = async () => {
@@ -44,9 +40,9 @@ function HistoryOrder() {
     setPage(1);
     setError(false);
     try {
-      const newData = await mockFetchData(1);
-      setHistoryOrderData(newData);
-      setHasMore(newData.length === PAGE_SIZE);
+      const { list, hasMore } = await fetchData(1, beginTime, endTime);
+      setHistoryOrderData(list);
+      setHasMore(hasMore);
     } catch (err) {
       setError(true);
     }
@@ -60,10 +56,11 @@ function HistoryOrder() {
 
     try {
       const newPage = page + 1;
-      const moreData = await mockFetchData(newPage);
-      if (moreData.length > 0) {
-        setHistoryOrderData((prev) => [...prev, ...moreData]);
+      const { list, hasMore } = await fetchData(newPage, beginTime, endTime);
+      if (list.length > 0) {
+        setHistoryOrderData((prev) => [...prev, ...list]);
         setPage(newPage);
+        setHasMore(hasMore);
       } else {
         setHasMore(false);
       }
@@ -82,9 +79,9 @@ function HistoryOrder() {
     setIsFetching(true); // 启动加载状态
     setError(false);
     try {
-      const newData = await mockFetchData(1);
-      setHistoryOrderData(newData);
-      setHasMore(newData.length === PAGE_SIZE);
+      const { list, hasMore } = await fetchData(1, beginTime, endTime);
+      setHistoryOrderData(list);
+      setHasMore(hasMore);
       setPage(1); // 确保重置为第一页
     } catch (err) {
       setError(true);
@@ -101,7 +98,11 @@ function HistoryOrder() {
       loosingText="释放刷新"
       successText="刷新成功"
     >
-      <DataSelect />
+      {historyOrderData.length !== 0 && <DataSelect onDateChange={(start, end) => {
+        setbeginTime(start);
+        setEndTime(end);
+        handleRefresh();
+      }} />}
       <List loading={isFetching} hasMore={hasMore} onLoad={loadMoreData}>
         {historyOrderData.length === 0 && !loading ? (
           <Empty>

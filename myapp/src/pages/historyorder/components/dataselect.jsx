@@ -13,7 +13,7 @@ function formatDateRange(dates) {
   return ''
 }
 
-function DateRangeSelector() {
+function DateRangeSelector({ onDateChange }) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState([])
   const [formatValue, setFormatValue] = useState('')
@@ -30,17 +30,18 @@ function DateRangeSelector() {
     }
   }
 
-  // 打印选择的起始和结束日期
+  // 处理日期选择确认
   const handleConfirm = (newValue) => {
     if (newValue.length === 2) {
-      // 输出选择的日期范围
-      console.log(`选中的起始时间: ${newValue[0]}`)
-      console.log(`选中的结束时间: ${newValue[1]}`)
-      setFormatValue(formatDateRange(newValue))
+      const startTime = newValue[0].getTime();
+      const endTime = newValue[1].getTime();
+      setFormatValue(formatDateRange(newValue));
+      // 调用父组件传入的回调函数
+      onDateChange && onDateChange(startTime, endTime);
     } else {
-      console.log('未选择完整的日期范围')
+      console.log('未选择完整的日期范围');
     }
-    setOpen(false)
+    setOpen(false);
   }
 
   const { minDate, maxDate } = getDateRange()
