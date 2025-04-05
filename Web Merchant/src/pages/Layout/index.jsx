@@ -21,13 +21,19 @@ const LayoutPage = () => {
   return (
     <Layout className="min-h-screen">
       {/* 顶部导航 */}
-      <Header className="bg-[#00668c]/80 flex items-center justify-end px-6 h-16">
-        <div className="text-white mr-4 text-lg">SHUFU</div>
-        <Button
-          type="text"
-          icon={<LogoutOutlined />}
-          className="text-white text-lg"
-        />
+      <Header className="bg-[#00668c]/80 flex items-center justify-between px-6 h-16">
+        {/* Logo */}
+        <div className="h-16 flex items-center pl-6">
+          <span className="text-2xl font-bold text-[#ff6b00]">O跑</span>
+        </div>
+        <div className="flex items-center">
+          <div className="text-white mr-4 text-lg">SHUFU</div>
+          <Button
+            type="text"
+            icon={<LogoutOutlined />}
+            className="text-white text-lg"
+          />
+        </div>
       </Header>
 
       <Layout>
@@ -45,17 +51,12 @@ const LayoutPage = () => {
             </div>
           }
         >
-          {/* Logo */}
-          <div className="h-16 flex items-center pl-6">
-            <span className="text-2xl font-bold text-[#ff6b00]">O跑</span>
-          </div>
-
           {/* 侧边菜单 - 使用theme="dark"并通过CSS覆盖颜色 */}
           <Menu
             theme="dark"
             mode="inline"
             defaultSelectedKeys={["/"]}
-            className="bg-[#00668c]/0 border-r-0 text-lg space-y-3"
+            className="bg-[#00668c]/0 border-r-0 text-lg space-y-3 mt-4"
             selectedKeys={[
               location.pathname === "/" ? "/" : location.pathname.slice(1),
             ]}
