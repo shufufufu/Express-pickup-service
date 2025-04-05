@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Form, Input, Checkbox, Popconfirm, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import loginPic from "@/assets/login.jpg";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const [espanol, setEspanol] = useState(false);
   const [showPopconfirm, setShowPopconfirm] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const navigate = useNavigate();
 
   const onFinish = (values) => {
     if (!espanol) {
@@ -21,6 +23,7 @@ const LoginPage = () => {
     });
 
     console.log("表单数据:", values);
+    navigate("/");
   };
 
   const handleConfirm = () => {

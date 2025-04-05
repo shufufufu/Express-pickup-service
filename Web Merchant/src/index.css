@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.ant-menu-item,
+.ant-menu-item-selected,
+.ant-menu-item:hover {
+  color: #ffffff !important;
+}
+
+.ant-menu-item .ant-menu-item-icon {
+  color: #ffffff !important;
+}
+
+/* 确保触发器背景色与侧边栏一致 */
+.ant-layout-sider-trigger {
+  background: #00678c00 !important;
+}
+
+/* 选中项的背景色 */
+.ant-menu-item-selected {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 悬停项的背景色 */
+.ant-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
