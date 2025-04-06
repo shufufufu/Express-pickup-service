@@ -6,6 +6,7 @@ import Order from "@/pages/Order";
 import History from "@/pages/History";
 import Analysis from "@/pages/Analysis";
 import Comment from "@/pages/Comment";
+import Riderinfo from "@/pages/Rider";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
       {
         path: "comment",
         element: <Comment />,
+      },
+      {
+        path: "riderinfo",
+        element: <Riderinfo />,
       },
     ],
   },

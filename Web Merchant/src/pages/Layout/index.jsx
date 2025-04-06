@@ -9,6 +9,7 @@ import {
   PieChartOutlined,
   BarsOutlined,
   CommentOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
@@ -21,7 +22,7 @@ const LayoutPage = () => {
   return (
     <Layout className="min-h-screen">
       {/* 顶部导航 */}
-      <Header className="bg-[#00668c]/80 flex items-center justify-between px-6 h-16">
+      <Header className="bg-[#00668c]/80 flex items-center justify-between px-6 h-16 fixed top-0 left-0 right-0 z-10">
         {/* Logo */}
         <div className="h-16 flex items-center pl-6">
           <span className="text-2xl font-bold text-[#ff6b00]">O跑</span>
@@ -43,7 +44,7 @@ const LayoutPage = () => {
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
-          className="bg-[#00668c]/80 overflow-auto h-[calc(100vh-64px)]"
+          className="bg-[#00668c]/80 overflow-auto fixed left-0 top-16 bottom-0 z-10"
           // 自定义触发器
           trigger={
             <div className="bg-[#00668c]/0 text-white h-12 leading-[48px] text-center text-2xl hover:bg-white/10 transform-all duration-300 hover:text-3xl">
@@ -85,12 +86,25 @@ const LayoutPage = () => {
                 label: "建议与反馈",
                 onClick: () => navigate("/comment"),
               },
+              {
+                key: "riderinfo",
+                icon: <UserOutlined className="mr-2" />,
+                label: "个人信息",
+                onClick: () => navigate("/riderinfo"),
+              },
             ]}
           />
         </Sider>
 
         {/* 主体内容 */}
-        <Layout className="p-6 bg-gray-100">
+        <Layout
+          className="bg-gray-100 transition-all duration-300 pt-20 px-4"
+          style={{
+            marginLeft: collapsed ? 80 : 200,
+            minHeight: "calc(100vh - 64px)",
+            overflow: "auto",
+          }}
+        >
           {/* 内容区域 */}
           <Content className="min-h-[calc(100vh-64px-48px)]">
             <Outlet />
