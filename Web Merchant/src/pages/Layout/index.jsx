@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Layout, Menu, Button } from "antd";
+import { Layout, Menu, Button, Popconfirm, message } from "antd";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
   FileTextOutlined,
@@ -19,6 +19,11 @@ const LayoutPage = () => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
+  const confirm = () => {
+    message.success("退出成功");
+    navigate("/login");
+  };
+
   return (
     <Layout className="min-h-screen">
       {/* 顶部导航 */}
@@ -28,12 +33,25 @@ const LayoutPage = () => {
           <span className="text-2xl font-bold text-[#ff6b00]">O跑</span>
         </div>
         <div className="flex items-center">
-          <div className="text-white mr-4 text-lg">SHUFU</div>
-          <Button
-            type="text"
-            icon={<LogoutOutlined />}
-            className="text-white text-lg"
-          />
+          <div
+            className="text-white mr-4 text-lg hover:scale-125 hover:text-sky-300 transform-all duration-300 cursor-pointer"
+            onClick={() => navigate("/riderinfo")}
+          >
+            SHUFU
+          </div>
+          <Popconfirm
+            title="提示"
+            description="是否确定要退出当前账号？"
+            onConfirm={confirm}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button
+              type="text"
+              icon={<LogoutOutlined />}
+              className="text-white text-lg hover:scale-125 transform-all duration-300"
+            />
+          </Popconfirm>
         </div>
       </Header>
 

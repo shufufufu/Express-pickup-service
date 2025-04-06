@@ -85,7 +85,7 @@ const LoginPage = () => {
             className="w-full space-y-4 pt-6"
           >
             <Form.Item
-              name="username"
+              name="iphoneNumber"
               rules={[
                 { required: true, message: "请输入手机号码！" },
                 {
@@ -152,8 +152,14 @@ const LoginPage = () => {
               </div>
             </div>
             <div className="flex w-full">
-              <div className="text-gray-500 text-base mt-4 ml-auto mr-6">
-                还没有账号？注册账号
+              <div className="text-gray-500 text-base mt-4 ml-auto mr-6 flex">
+                <div>还没有账号？</div>
+                <div
+                  className="ml-1 cursor-pointer hover:scale-125 hover:underline-offset-4 hover:underline hover:text-gray-700 transition-all duration-300"
+                  onClick={() => navigate("/register")}
+                >
+                  注册账号
+                </div>
               </div>
             </div>
           </div>

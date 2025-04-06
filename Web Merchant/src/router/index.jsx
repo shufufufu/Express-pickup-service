@@ -7,6 +7,7 @@ import History from "@/pages/History";
 import Analysis from "@/pages/Analysis";
 import Comment from "@/pages/Comment";
 import Riderinfo from "@/pages/Rider";
+import Register from "@/pages/Register";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
   },
   {
     path: "*",
