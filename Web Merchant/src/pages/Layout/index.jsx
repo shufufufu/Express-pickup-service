@@ -10,6 +10,7 @@ import {
   BarsOutlined,
   CommentOutlined,
   UserOutlined,
+  NotificationOutlined,
 } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
@@ -103,6 +104,12 @@ const LayoutPage = () => {
                 icon: <CommentOutlined className="mr-2" />,
                 label: "建议与反馈",
                 onClick: () => navigate("/comment"),
+              },
+              {
+                key: "broadcast",
+                icon: <NotificationOutlined className="mr-2" />,
+                label: "发布公告",
+                onClick: () => navigate("/broadcast"),
               },
               {
                 key: "riderinfo",

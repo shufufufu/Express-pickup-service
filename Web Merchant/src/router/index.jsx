@@ -8,6 +8,7 @@ import Analysis from "@/pages/Analysis";
 import Comment from "@/pages/Comment";
 import Riderinfo from "@/pages/Rider";
 import Register from "@/pages/Register";
+import Broadcast from "@/pages/Broadcast";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: "comment",
         element: <Comment />,
+      },
+      {
+        path: "broadcast",
+        element: <Broadcast />,
       },
       {
         path: "riderinfo",
