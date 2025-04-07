@@ -12,6 +12,8 @@ import {
   UserOutlined,
   NotificationOutlined,
 } from "@ant-design/icons";
+import Logo from "@/assets/logo.png";
+import OUP from "@/assets/OUP.png";
 
 const { Header, Sider, Content } = Layout;
 
@@ -30,8 +32,10 @@ const LayoutPage = () => {
       {/* 顶部导航 */}
       <Header className="bg-[#00668c]/80 flex items-center justify-between px-6 h-16 fixed top-0 left-0 right-0 z-10">
         {/* Logo */}
-        <div className="h-16 flex items-center pl-6">
-          <span className="text-2xl font-bold text-[#ff6b00]">O跑</span>
+        <div className="h-16 flex items-center pl-2">
+          <img src={Logo} alt="logo" className="h-8"/>
+          <img src={OUP} alt="logo" className="h-8 ml-2 mt-2"/>
+          <span className="text-3xl font-bold text-[#ff6b00] ml-2">O跑</span>
         </div>
         <div className="flex items-center">
           <div

@@ -3,6 +3,8 @@ import { Form, Input, Checkbox, Popconfirm, message } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import loginPic from "@/assets/login.jpg";
 import { useNavigate } from "react-router-dom";
+import Logo from "@/assets/logo.png";
+import OUP from "@/assets/OUP.png";
 
 const LoginPage = () => {
   const [espanol, setEspanol] = useState(false);
@@ -42,32 +44,17 @@ const LoginPage = () => {
 
   return (
     <div
-      className="flex min-h-screen w-full items-center justify-center bg-cover bg-center"
+      className="flex min-h-screen w-full items-start justify-center bg-cover bg-center pt-20"
       style={{ backgroundImage: `url(${loginPic})` }}
     >
       {contextHolder}
       <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white/20 p-8 shadow-xl backdrop-blur-sm">
         <div className="flex flex-col items-center justify-center space-y-5">
           {/* Logo */}
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white">
-            <svg
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12"
-            >
-              <circle cx="50" cy="50" r="50" fill="white" />
-              <path
-                d="M50 25C45 35 35 40 25 35C15 30 15 15 25 10C35 5 45 10 50 25Z"
-                fill="#0EA5E9"
-              />
-              <path
-                d="M50 75C55 65 65 60 75 65C85 70 85 85 75 90C65 95 55 90 50 75Z"
-                fill="#0EA5E9"
-              />
-              <path d="M30 50H70" stroke="#0EA5E9" strokeWidth="4" />
-            </svg>
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-400/50">
+            <img src={Logo} alt="logo" className="h-10"/>
           </div>
+          <img src={OUP} alt="oup" className="h-10"/>
 
           {/* Title */}
           <div className="text-center">

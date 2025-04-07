@@ -233,7 +233,7 @@ const OrderManagement = () => {
       title: "订单号",
       dataIndex: "expressId",
       key: "expressId",
-      width: 150,
+      width: 135,
     },
     {
       title: "送达地址",
@@ -245,7 +245,7 @@ const OrderManagement = () => {
       title: "联系电话",
       dataIndex: "iphoneNumber",
       key: "iphoneNumber",
-      width: 150,
+      width: 135,
     },
     {
       title: "备注",
@@ -257,7 +257,7 @@ const OrderManagement = () => {
       title: "下单时间",
       dataIndex: "createTime",
       key: "createTime",
-      width: 180,
+      width: 130,
     },
     {
       title: "剩余时间",
@@ -283,7 +283,7 @@ const OrderManagement = () => {
     {
       title: "操作",
       key: "action",
-      width: 300,
+      width: 260,
       render: (_, record) => getActionButtons(record),
     },
   ];
