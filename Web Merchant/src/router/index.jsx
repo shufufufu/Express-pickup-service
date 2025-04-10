@@ -9,11 +9,16 @@ import Comment from "@/pages/Comment";
 import Riderinfo from "@/pages/Rider";
 import Register from "@/pages/Register";
 import Broadcast from "@/pages/Broadcast";
+import AuthRoute from "@/pages/components/AuthRoute";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <AuthRoute>
+        <Layout />
+      </AuthRoute>
+    ),
     children: [
       {
         index: true,

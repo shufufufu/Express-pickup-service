@@ -5,27 +5,53 @@ import loginPic from "@/assets/login.jpg";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.png";
 import OUP from "@/assets/OUP.png";
+import { fetchLogin } from "@/apis/index";
+import { useUserStore } from "@/store/index";
 
 const LoginPage = () => {
   const [espanol, setEspanol] = useState(false);
   const [showPopconfirm, setShowPopconfirm] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false); // 添加加载状态
+  const setToken = useUserStore((state) => state.setToken);
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     if (!espanol) {
       setShowPopconfirm(true);
       return;
     }
 
-    //登录成功后显示提示
-    messageApi.open({
-      type: "success",
-      content: "登录成功",
-    });
+    try {
+      setLoading(true); // 开始加载
 
-    console.log("表单数据:", values);
-    navigate("/");
+      // 调用登录 API
+      const result = await fetchLogin(values);
+
+      if (result.success) {
+        // 登录成功
+        messageApi.success("登录成功");
+
+        // 如果 API 返回了 token，存储到 localStorage
+        if (result.data && result.data.token) {
+          setToken(result.data.token);
+        }
+
+        // 延迟导航，让用户看到成功消息
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      } else {
+        // 登录失败
+        messageApi.error(result.errorMsg || "登录失败，请检查账号和密码");
+      }
+    } catch (error) {
+      // 处理异常
+      console.error("登录过程发生错误:", error);
+      messageApi.error("登录失败，请稍后重试");
+    } finally {
+      setLoading(false); // 结束加载
+    }
   };
 
   const handleConfirm = () => {
@@ -52,9 +78,9 @@ const LoginPage = () => {
         <div className="flex flex-col items-center justify-center space-y-5">
           {/* Logo */}
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-400/50">
-            <img src={Logo} alt="logo" className="h-10"/>
+            <img src={Logo || "/placeholder.svg"} alt="logo" className="h-10" />
           </div>
-          <img src={OUP} alt="oup" className="h-10"/>
+          <img src={OUP || "/placeholder.svg"} alt="oup" className="h-10" />
 
           {/* Title */}
           <div className="text-center">
@@ -72,7 +98,7 @@ const LoginPage = () => {
             className="w-full space-y-4 pt-6"
           >
             <Form.Item
-              name="iphoneNumber"
+              name="account"
               rules={[
                 { required: true, message: "请输入手机号码！" },
                 {
@@ -90,7 +116,7 @@ const LoginPage = () => {
             </Form.Item>
 
             <Form.Item
-              name="password"
+              name="passWord"
               rules={[{ required: true, message: "请输入密码！" }]}
             >
               <Input.Password
@@ -113,12 +139,13 @@ const LoginPage = () => {
               >
                 <button
                   type="submit"
+                  disabled={loading} // 禁用按钮当加载中
                   className="relative h-12 w-full text-xl rounded-full overflow-hidden text-gray-700 font-medium focus:outline-none group border border-sky-200"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-[#d4eaf7] to-[#b6ccd8] z-0"></span>
                   <span className="absolute inset-0 bg-gradient-to-r from-[#52bee5] to-[#b6ccd8] opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10"></span>
                   <span className="relative z-20 group-hover:text-white transition-colors duration-500">
-                    登录
+                    {loading ? "登录中..." : "登录"}
                   </span>
                 </button>
               </Popconfirm>
