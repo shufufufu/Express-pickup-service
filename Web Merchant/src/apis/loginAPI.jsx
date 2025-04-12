@@ -13,12 +13,14 @@ export const fetchLogin = async (params) => {
   try {
     const response = await http({
       method: "POST",
-      url: `${baseUrl}/login`,
+      url: `${baseUrl}/shop/login`,
       data: params,
       auth: false, // 不需要认证
     });
 
     // 返回响应数据
+    console.log(response.data);
+
     return response.data;
   } catch (error) {
     // 处理错误

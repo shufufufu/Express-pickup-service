@@ -33,8 +33,9 @@ const LoginPage = () => {
         messageApi.success("登录成功");
 
         // 如果 API 返回了 token，存储到 localStorage
-        if (result.data && result.data.token) {
-          setToken(result.data.token);
+        if (result.data) {
+          console.log(result.data);
+          setToken(result.data);
         }
 
         // 延迟导航，让用户看到成功消息
