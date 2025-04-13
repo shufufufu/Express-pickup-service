@@ -6,7 +6,7 @@ import Taro from "@tarojs/taro";
 
 // 渐变背景样式
 const gradientStyle = {
-  background: "linear-gradient(to right, #d4eaf7, #b6ccd8)", 
+  background: "linear-gradient(to right, #d4eaf7, #b6ccd8)",
 };
 
 // 状态序列用于测试
@@ -30,21 +30,21 @@ const OrderBox = (props) => {
   // 获取当前状态的描述
   const getStatusDesc = () => {
     switch (currentStatus) {
-      case STEP_STATES.STEP1.WAITING:
+      case STEP_STATES.STEP1.WAITING: //0
         return "待接单";
-      case STEP_STATES.STEP1.ACCEPTED:
+      case STEP_STATES.STEP1.ACCEPTED: //1
         return "已接单";
-      case STEP_STATES.STEP1.REJECTED:
+      case STEP_STATES.STEP1.REJECTED: //2
         return "未接单";
-      case STEP_STATES.STEP2.PICKING:
+      case STEP_STATES.STEP2.PICKING: //3
         return "正在取件";
-      case STEP_STATES.STEP2.SUCCESS:
+      case STEP_STATES.STEP2.SUCCESS: //4
         return "取件成功";
-      case STEP_STATES.STEP2.FAILED:
+      case STEP_STATES.STEP2.FAILED: //5
         return "取件失败";
-      case STEP_STATES.STEP3.DELIVERING:
+      case STEP_STATES.STEP3.DELIVERING: //6
         return "配送中";
-      case STEP_STATES.STEP3.DELIVERED:
+      case STEP_STATES.STEP3.DELIVERED: //7
         return "已送达";
       default:
         return "未知状态";
@@ -57,26 +57,37 @@ const OrderBox = (props) => {
     e.stopPropagation();
     setStatusIndex((prev) => (prev + 1) % testStatusSequence.length);
   };
-  
+
   // 处理卡片点击，跳转到订单详情
   const navigateToOrderDetail = () => {
     // 准备要传递的参数
-    const { expressId, dormAdd, downTime , createTime,image, deliverId,iphoneNumber,comment,id } = props.data;
-    
+    const {
+      expressId,
+      dormAdd,
+      downTime,
+      createTime,
+      image,
+      deliverId,
+      iphoneNumber,
+      comment,
+      id,
+    } = props.data;
+
     // 导航到订单详情页面
     Taro.navigateTo({
-      url: `/pages/orderinfo/index?` + 
-      `id=${expressId}` +
-      `&expressId=${expressId}` +
-      `&dormAdd=${encodeURIComponent(dormAdd)}` +
-      `&stepState=${currentStatus}` +
-      `&downTime=${downTime}` +
-      `&orderTime=${createTime}` +
-      `&image=${image}` +
-      `&deliverId=${deliverId}` +
-      `&iphoneNumber=${iphoneNumber}`+ 
-      `&comment=${encodeURIComponent(comment)}` +
-      `&orderId=${id}`
+      url:
+        `/pages/orderinfo/index?` +
+        `id=${expressId}` +
+        `&expressId=${expressId}` +
+        `&dormAdd=${encodeURIComponent(dormAdd)}` +
+        `&stepState=${currentStatus}` +
+        `&downTime=${downTime}` +
+        `&orderTime=${createTime}` +
+        `&image=${image}` +
+        `&deliverId=${deliverId}` +
+        `&iphoneNumber=${iphoneNumber}` +
+        `&comment=${encodeURIComponent(comment)}` +
+        `&orderId=${id}`,
     });
   };
 
@@ -109,21 +120,37 @@ const OrderBox = (props) => {
                 <View className="flex items-center">
                   <View
                     className="inline-block bg-sky-100 text-blue-700 text-center text-lg rounded-lg"
-                    style={{ width: "44px", height: "24px", lineHeight: "24px" }}
+                    style={{
+                      width: "44px",
+                      height: "24px",
+                      lineHeight: "24px",
+                    }}
                   >
                     {current.hours.toString().padStart(2, "0")}
                   </View>
-                  <View className="inline-block mx-2 text-blue-700 text-sm">:</View>
+                  <View className="inline-block mx-2 text-blue-700 text-sm">
+                    :
+                  </View>
                   <View
                     className="inline-block bg-sky-100 text-blue-700 text-center text-lg rounded-lg"
-                    style={{ width: "44px", height: "24px", lineHeight: "24px" }}
+                    style={{
+                      width: "44px",
+                      height: "24px",
+                      lineHeight: "24px",
+                    }}
                   >
                     {current.minutes.toString().padStart(2, "0")}
                   </View>
-                  <View className="inline-block mx-2 text-blue-700 text-sm">:</View>
+                  <View className="inline-block mx-2 text-blue-700 text-sm">
+                    :
+                  </View>
                   <View
                     className="inline-block bg-sky-100 text-blue-700 text-center text-lg rounded-lg"
-                    style={{ width: "44px", height: "24px", lineHeight: "24px" }}
+                    style={{
+                      width: "44px",
+                      height: "24px",
+                      lineHeight: "24px",
+                    }}
                   >
                     {current.seconds.toString().padStart(2, "0")}
                   </View>
@@ -138,7 +165,6 @@ const OrderBox = (props) => {
       <View className="pb-0 mb-0 mt-2">
         <Steps status={currentStatus} />
       </View>
-      
     </View>
   );
 };

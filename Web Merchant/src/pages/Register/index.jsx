@@ -9,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.png";
 import OUP from "@/assets/OUP.png";
+import { fetchRegister } from "@/apis";
 
 const RegisterPage = () => {
   const [form] = Form.useForm();
@@ -23,16 +24,17 @@ const RegisterPage = () => {
     }
 
     try {
-      // TODO: 调用注册API
-      // await registerUser(values);
-
-      messageApi.open({
-        type: "success",
-        content: "注册成功",
-      });
-
-      console.log("表单数据:", values);
-      navigate("/login");
+      const result = await fetchRegister(values);
+      if (result.success) {
+        messageApi.open({
+          type: "success",
+          content: "注册成功",
+        });
+        console.log("表单数据:", values);
+        navigate("/login");
+      } else {
+        throw new Error("注册失败");
+      }
     } catch (error) {
       messageApi.error(error.message || "注册失败，请重试");
     }
@@ -48,9 +50,9 @@ const RegisterPage = () => {
         <div className="flex flex-col items-center justify-center space-y-5">
           {/* Logo */}
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-400/50">
-                      <img src={Logo} alt="logo" className="h-10"/>
-                    </div>
-                    <img src={OUP} alt="oup" className="h-10"/>
+            <img src={Logo} alt="logo" className="h-10" />
+          </div>
+          <img src={OUP} alt="oup" className="h-10" />
 
           {/* Title */}
           <div className="text-center">
@@ -125,7 +127,7 @@ const RegisterPage = () => {
             </Form.Item>
 
             <Form.Item
-              name="token"
+              name="create"
               rules={[{ required: true, message: "请输入动态令牌！" }]}
             >
               <Input

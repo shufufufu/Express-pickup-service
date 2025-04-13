@@ -7,16 +7,20 @@ const baseUrl = "http://26.81.202.205:8080";
  * @param {Object} params - 登录参数
  * @param {string} params.account - 账号
  * @param {string} params.password - 密码
+ * @param {string} params.cerate - 密码
  * @returns {Promise<Object>} - 返回登录结果
  */
-export const fetchLogin = async (params) => {
+export const fetchRegister = async (params) => {
   try {
     const response = await http({
       method: "POST",
-      url: `${baseUrl}/shop/login`,
+      url: `${baseUrl}/shop/register`,
       data: params,
       auth: false, // 不需要认证
     });
+
+    // 返回响应数据
+    console.log(response.data);
 
     return response.data;
   } catch (error) {

@@ -14,6 +14,7 @@ import {
 } from "@ant-design/icons";
 import Logo from "@/assets/logo.png";
 import OUP from "@/assets/OUP.png";
+import { clearToken } from "@/utils";
 
 const { Header, Sider, Content } = Layout;
 
@@ -24,6 +25,7 @@ const LayoutPage = () => {
 
   const confirm = () => {
     message.success("退出成功");
+    clearToken();
     navigate("/login");
   };
 
@@ -33,8 +35,8 @@ const LayoutPage = () => {
       <Header className="bg-[#00668c]/80 flex items-center justify-between px-6 h-16 fixed top-0 left-0 right-0 z-10">
         {/* Logo */}
         <div className="h-16 flex items-center pl-2">
-          <img src={Logo} alt="logo" className="h-8"/>
-          <img src={OUP} alt="logo" className="h-8 ml-2 mt-2"/>
+          <img src={Logo} alt="logo" className="h-8" />
+          <img src={OUP} alt="logo" className="h-8 ml-2 mt-2" />
           <span className="text-3xl font-bold text-[#ff6b00] ml-2">O跑</span>
         </div>
         <div className="flex items-center">
