@@ -17,10 +17,20 @@ import {
   Row,
   Col,
   Typography,
+  message,
+  Spin,
+  Empty,
 } from "antd";
-import { EyeOutlined, FilterOutlined, ReloadOutlined } from "@ant-design/icons";
-import { generateMockOrders } from "./components/mockData";
-import { getStatusDesc, getStatusColor } from "./components/utils";
+import {
+  EyeOutlined,
+  FilterOutlined,
+  ReloadOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
+import { getStatusDesc, getStatusColor, STEP_STATES } from "./components/utils";
+import { fetchHistoryOrder } from "@/apis"; // 假设我们将接口函数放在这个位置
+import { getRiderId } from "@/utils/index"; // 获取骑手ID的函数
+import { generateMockOrders } from "./components/mockData"; // 模拟数据，可选使用
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -40,9 +50,10 @@ const HistoryOrders = () => {
   const [filterForm] = Form.useForm();
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState({});
+  const [useMockData, setUseMockData] = useState(false); // 是否使用模拟数据
 
-  // 模拟获取订单数据
-  const fetchOrders = (params = {}) => {
+  // 获取订单数据
+  const fetchOrders = async (params = {}) => {
     setLoading(true);
 
     // 合并筛选条件
@@ -55,20 +66,48 @@ const HistoryOrders = () => {
 
     // 根据当前标签页筛选
     if (activeTab === "personal") {
-      queryParams.deliverId = 1; // 假设当前骑手ID为1
+      queryParams.deliverId = getRiderId(); // 获取当前骑手ID
     }
 
-    // 模拟API请求延迟
-    setTimeout(() => {
-      const result = generateMockOrders(queryParams);
-      setOrders(result.data);
-      setPagination({
-        ...pagination,
-        current: result.page,
-        total: result.total,
-      });
+    try {
+      let result;
+
+      if (useMockData) {
+        // 使用模拟数据
+        const mockResult = generateMockOrders(queryParams);
+        result = {
+          success: true,
+          data: {
+            list: mockResult.data,
+            total: mockResult.total,
+          },
+        };
+        // 模拟网络延迟
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      } else {
+        // 使用真实API
+        result = await fetchHistoryOrder(queryParams);
+      }
+
+      if (result.success) {
+        setOrders(result.data.list || []);
+        setPagination({
+          ...pagination,
+          current: queryParams.page,
+          pageSize: queryParams.pageSize,
+          total: result.data.total || 0,
+        });
+      } else {
+        message.error(result.errorMsg || "获取订单数据失败");
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error("获取订单数据出错:", error);
+      message.error("获取订单数据出错，请稍后重试");
+      setOrders([]);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   // 初始加载
@@ -79,7 +118,7 @@ const HistoryOrders = () => {
   // 处理表格分页变化
   const handleTableChange = (pagination) => {
     setPagination(pagination);
-    fetchOrders({ page: pagination.current });
+    fetchOrders({ page: pagination.current, pageSize: pagination.pageSize });
   };
 
   // 查看订单详情
@@ -93,10 +132,16 @@ const HistoryOrders = () => {
     const formattedFilters = { ...values };
 
     // 处理日期范围
-    if (values.dateRange) {
+    if (values.dateRange && values.dateRange.length === 2) {
       formattedFilters.beginTime = values.dateRange[0].startOf("day").valueOf();
       formattedFilters.endTime = values.dateRange[1].endOf("day").valueOf();
       delete formattedFilters.dateRange;
+    }
+
+    // 将orderId映射到接口需要的参数名
+    if (values.id) {
+      formattedFilters.orderId = values.id;
+      delete formattedFilters.id;
     }
 
     setFilters(formattedFilters);
@@ -114,6 +159,22 @@ const HistoryOrders = () => {
     filterForm.resetFields();
     setFilters({});
     setPagination({ ...pagination, current: 1 });
+    fetchOrders({ page: 1 });
+  };
+
+  // 移除单个筛选条件
+  const removeFilter = (key) => {
+    const newFilters = { ...filters };
+    delete newFilters[key];
+    setFilters(newFilters);
+    setPagination({ ...pagination, current: 1 });
+    fetchOrders({ page: 1, ...newFilters });
+  };
+
+  // 切换数据源（模拟/真实）
+  const toggleDataSource = () => {
+    setUseMockData(!useMockData);
+    message.info(`已切换到${!useMockData ? "模拟" : "真实"}数据源`);
     fetchOrders({ page: 1 });
   };
 
@@ -187,6 +248,74 @@ const HistoryOrders = () => {
     },
   ];
 
+  // 获取筛选条件标签
+  const renderFilterTags = () => {
+    if (Object.keys(filters).length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap items-center bg-blue-50 p-2 rounded-md mb-4">
+        <span className="mr-2 text-gray-600">当前筛选条件:</span>
+        {filters.userId && (
+          <Tag
+            closable
+            onClose={() => removeFilter("userId")}
+            className="mb-1 mr-2"
+          >
+            用户ID: {filters.userId}
+          </Tag>
+        )}
+        {filters.deliverId && (
+          <Tag
+            closable
+            onClose={() => removeFilter("deliverId")}
+            className="mb-1 mr-2"
+          >
+            骑手ID: {filters.deliverId}
+          </Tag>
+        )}
+        {filters.orderId && (
+          <Tag
+            closable
+            onClose={() => removeFilter("orderId")}
+            className="mb-1 mr-2"
+          >
+            订单号: {filters.orderId}
+          </Tag>
+        )}
+        {filters.status && (
+          <Tag
+            closable
+            onClose={() => removeFilter("status")}
+            className="mb-1 mr-2"
+          >
+            状态: {getStatusDesc(filters.status)}
+          </Tag>
+        )}
+        {filters.beginTime && filters.endTime && (
+          <Tag
+            closable
+            onClose={() => {
+              removeFilter("beginTime");
+              removeFilter("endTime");
+            }}
+            className="mb-1 mr-2"
+          >
+            时间范围: {new Date(filters.beginTime).toLocaleDateString()} 至{" "}
+            {new Date(filters.endTime).toLocaleDateString()}
+          </Tag>
+        )}
+        <Button
+          size="small"
+          icon={<CloseCircleOutlined />}
+          onClick={resetFilters}
+          className="ml-auto"
+        >
+          清除所有
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <Card
       title="历史订单查询"
@@ -199,28 +328,61 @@ const HistoryOrders = () => {
           >
             筛选
           </Button>
-          <Button icon={<ReloadOutlined />} onClick={resetFilters}>
-            重置
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              resetFilters();
+              fetchOrders();
+            }}
+          >
+            刷新
           </Button>
+          {/* 开发环境下显示切换数据源按钮 */}
+          {import.meta.env.MODE === "development" && (
+            <Button onClick={toggleDataSource}>
+              {useMockData ? "使用真实数据" : "使用模拟数据"}
+            </Button>
+          )}
         </Space>
       }
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+      <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-4">
         <TabPane tab="所有历史订单" key="all" />
         <TabPane tab="本人历史订单" key="personal" />
       </Tabs>
 
+      {/* 筛选条件标签 */}
+      {renderFilterTags()}
+
+      {/* 订单表格 */}
       <Table
         columns={columns}
         dataSource={orders}
         rowKey="id"
-        pagination={pagination}
+        pagination={{
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条记录`,
+          pageSizeOptions: ["10", "20", "50", "100"],
+        }}
         onChange={handleTableChange}
         loading={loading}
         scroll={{ x: 1100 }}
+        className="border rounded-lg"
+        locale={{
+          emptyText: (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="暂无订单数据"
+            />
+          ),
+        }}
       />
 
-      {/* 筛选抽屉 */}
+      {/* 筛选模态框 */}
       <Modal
         title="筛选条件"
         open={filterVisible}
@@ -228,7 +390,12 @@ const HistoryOrders = () => {
         footer={null}
         width={600}
       >
-        <Form form={filterForm} layout="vertical" onFinish={handleFilterSubmit}>
+        <Form
+          form={filterForm}
+          layout="vertical"
+          onFinish={handleFilterSubmit}
+          className="p-2"
+        >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="userId" label="用户ID">
@@ -251,14 +418,30 @@ const HistoryOrders = () => {
             <Col span={12}>
               <Form.Item name="status" label="订单状态">
                 <Select placeholder="请选择订单状态" allowClear>
-                  <Select.Option value="STEP1_WAITING">待接单</Select.Option>
-                  <Select.Option value="STEP1_ACCEPTED">已接单</Select.Option>
-                  <Select.Option value="STEP1_REJECTED">已拒单</Select.Option>
-                  <Select.Option value="STEP2_PICKING">取件中</Select.Option>
-                  <Select.Option value="STEP2_SUCCESS">取件成功</Select.Option>
-                  <Select.Option value="STEP2_FAILED">取件失败</Select.Option>
-                  <Select.Option value="STEP3_DELIVERING">配送中</Select.Option>
-                  <Select.Option value="STEP3_DELIVERED">已送达</Select.Option>
+                  <Select.Option value={STEP_STATES.STEP1.WAITING}>
+                    待接单
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP1.ACCEPTED}>
+                    已接单
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP1.REJECTED}>
+                    已拒单
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP2.PICKING}>
+                    取件中
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP2.SUCCESS}>
+                    取件成功
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP2.FAILED}>
+                    取件失败
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP3.DELIVERING}>
+                    配送中
+                  </Select.Option>
+                  <Select.Option value={STEP_STATES.STEP3.DELIVERED}>
+                    已送达
+                  </Select.Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -274,6 +457,7 @@ const HistoryOrders = () => {
                 应用筛选
               </Button>
               <Button onClick={() => filterForm.resetFields()}>清空条件</Button>
+              <Button onClick={() => setFilterVisible(false)}>取消</Button>
             </Space>
           </Form.Item>
         </Form>

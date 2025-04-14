@@ -15,6 +15,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false); // 添加加载状态
   const setToken = useUserStore((state) => state.setToken);
+  const setRiderId = useUserStore((state) => state.setRiderId);
 
   const onFinish = async (values) => {
     if (!espanol) {
@@ -36,7 +37,7 @@ const LoginPage = () => {
         if (result.data) {
           console.log(result.data);
           setToken(result.data.token);
-          setToken(result.data.token);
+          setRiderId(result.data.id);
         }
 
         // 延迟导航，让用户看到成功消息

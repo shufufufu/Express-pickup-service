@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// OrderManagement.jsx
+import React, { useState, useEffect } from "react";
 import { Table, Card, Tabs, Tag, Button, Modal, message, Space } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import {
@@ -8,78 +9,87 @@ import {
   getNextStatus,
 } from "./components/STEP_STATES";
 import SimpleCountdown from "./components/Countdown";
-
-// 模拟订单数据
-const mockOrders = [
-  {
-    id: "1",
-    expressId: "SF1234567890",
-    dormAdd: "第一宿舍楼 3单元 502室",
-    status: STEP_STATES.STEP1.WAITING,
-    downTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30分钟后
-    createTime: "2025-04-05 10:00:00",
-    image:
-      "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    iphoneNumber: "13800138000",
-    comment: "请轻拿轻放，易碎物品",
-  },
-  {
-    id: "2",
-    expressId: "YT9876543210",
-    dormAdd: "第二宿舍楼 2单元 305室",
-    status: STEP_STATES.STEP1.ACCEPTED,
-    downTime: new Date(Date.now() + 45 * 60 * 1000).toISOString(), // 45分钟后
-    createTime: "2025-04-05 09:30:00",
-    image:
-      "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    iphoneNumber: "13900139000",
-    comment: "",
-  },
-  {
-    id: "3",
-    expressId: "ZT5678901234",
-    dormAdd: "第三宿舍楼 1单元 101室",
-    status: STEP_STATES.STEP2.SUCCESS,
-    downTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 60分钟后
-    createTime: "2025-04-05 09:00:00",
-    image:
-      "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    iphoneNumber: "13700137000",
-    comment: "放在门口即可，不用等我",
-  },
-  {
-    id: "4",
-    expressId: "JD6543210987",
-    dormAdd: "第四宿舍楼 4单元 405室",
-    status: STEP_STATES.STEP3.DELIVERED,
-    downTime: new Date(Date.now() + 20 * 60 * 1000).toISOString(), // 20分钟后
-    createTime: "2025-04-05 08:30:00",
-    image:
-      "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    iphoneNumber: "13600136000",
-    comment: "",
-  },
-  {
-    id: "5",
-    expressId: "YD1357924680",
-    dormAdd: "第五宿舍楼 5单元 501室",
-    status: STEP_STATES.STEP1.REJECTED,
-    downTime: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15分钟后
-    createTime: "2025-04-05 08:00:00",
-    image:
-      "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-    iphoneNumber: "13500135000",
-    comment: "加急件，请尽快送达",
-  },
-];
+import { fetchOrder } from "@/apis"; // 根据实际路径调整引入
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]); // 订单数据
   const [activeTab, setActiveTab] = useState("all");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // 处理订单状态更新
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+
+  // 加载订单数据（包含分页参数）
+  const loadOrders = async (extraParams = {}) => {
+    setLoading(true);
+    const result = await fetchOrder({
+      page: currentPage,
+      pageSize,
+      ...extraParams,
+    });
+    setLoading(false);
+    if (result.success) {
+      setOrders(result.data.orders);
+      setTotal(result.data.totalPage);
+    } else {
+      message.error(`订单获取失败: ${result.errorMsg}`);
+    }
+  };
+
+  // 初始化加载
+  useEffect(() => {
+    loadOrders();
+  }, [currentPage, pageSize]);
+
+  // 处理分页变化
+  const handleTableChange = (page, newPageSize) => {
+    setCurrentPage(page);
+    setPageSize(newPageSize);
+  };
+
+  // 根据订单状态（本示例依然在前端根据 activeTab 过滤，如果后端提供过滤参数，可在 loadOrders 时传入）
+  const getFilteredOrders = () => {
+    switch (activeTab) {
+      case "waiting":
+        return orders.filter(
+          (order) => order.status === STEP_STATES.STEP1.WAITING
+        );
+      case "processing":
+        return orders.filter((order) =>
+          [
+            STEP_STATES.STEP1.ACCEPTED,
+            STEP_STATES.STEP2.PICKING,
+            STEP_STATES.STEP2.SUCCESS,
+            STEP_STATES.STEP3.DELIVERING,
+          ].includes(order.status)
+        );
+      case "completed":
+        return orders.filter(
+          (order) => order.status === STEP_STATES.STEP3.DELIVERED
+        );
+      case "failed":
+        return orders.filter((order) =>
+          [STEP_STATES.STEP1.REJECTED, STEP_STATES.STEP2.FAILED].includes(
+            order.status
+          )
+        );
+      default:
+        return orders;
+    }
+  };
+
+  const filteredOrders = getFilteredOrders();
+
+  // 刷新订单（重新加载数据）
+  const refreshOrders = () => {
+    loadOrders();
+  };
+
+  // 模拟更新订单状态，如有需要，可调用真实接口更新
   const handleUpdateStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
@@ -89,7 +99,7 @@ const OrderManagement = () => {
     message.success(`订单状态已更新为: ${getStatusDesc(newStatus)}`);
   };
 
-  // 处理订单进度推进
+  // 推进订单状态
   const handleProgressOrder = (orderId) => {
     const order = orders.find((o) => o.id === orderId);
     if (order) {
@@ -120,18 +130,15 @@ const OrderManagement = () => {
     });
   };
 
-  // 查看订单详情
+  // 打开订单详情
   const showOrderDetail = (order) => {
     setCurrentOrder(order);
     setDetailModalVisible(true);
   };
 
-  // 获取操作按钮
+  // 根据订单状态返回操作按钮
   const getActionButtons = (order) => {
-    const buttons = [];
-
-    // 添加查看详情按钮
-    buttons.push(
+    const buttons = [
       <Button
         key="view"
         type="link"
@@ -139,10 +146,9 @@ const OrderManagement = () => {
         onClick={() => showOrderDetail(order)}
       >
         查看详情
-      </Button>
-    );
+      </Button>,
+    ];
 
-    // 根据状态添加操作按钮
     switch (order.status) {
       case STEP_STATES.STEP1.WAITING:
         buttons.push(
@@ -231,6 +237,12 @@ const OrderManagement = () => {
   const columns = [
     {
       title: "订单号",
+      dataIndex: "id",
+      key: "id",
+      width: 135,
+    },
+    {
+      title: "取件码",
       dataIndex: "expressId",
       key: "expressId",
       width: 135,
@@ -288,63 +300,28 @@ const OrderManagement = () => {
     },
   ];
 
-  // 根据选项卡筛选订单
-  const getFilteredOrders = () => {
-    switch (activeTab) {
-      case "waiting":
-        return orders.filter(
-          (order) => order.status === STEP_STATES.STEP1.WAITING
-        );
-      case "processing":
-        return orders.filter((order) => {
-          return (
-            order.status === STEP_STATES.STEP1.ACCEPTED ||
-            order.status === STEP_STATES.STEP2.PICKING ||
-            order.status === STEP_STATES.STEP2.SUCCESS ||
-            order.status === STEP_STATES.STEP3.DELIVERING
-          );
-        });
-      case "completed":
-        return orders.filter(
-          (order) => order.status === STEP_STATES.STEP3.DELIVERED
-        );
-      case "failed":
-        return orders.filter((order) => {
-          return (
-            order.status === STEP_STATES.STEP1.REJECTED ||
-            order.status === STEP_STATES.STEP2.FAILED
-          );
-        });
-      default:
-        return orders;
-    }
-  };
-
-  const filteredOrders = getFilteredOrders();
-
-  // 计算各状态订单数量
+  // 计算各状态订单数量（这里还是前端统计，如果需要后端统计可通过接口返回）
   const waitingCount = orders.filter(
     (order) => order.status === STEP_STATES.STEP1.WAITING
   ).length;
-  const processingCount = orders.filter((order) => {
-    return (
-      order.status === STEP_STATES.STEP1.ACCEPTED ||
-      order.status === STEP_STATES.STEP2.PICKING ||
-      order.status === STEP_STATES.STEP2.SUCCESS ||
-      order.status === STEP_STATES.STEP3.DELIVERING
-    );
-  }).length;
+  const processingCount = orders.filter((order) =>
+    [
+      STEP_STATES.STEP1.ACCEPTED,
+      STEP_STATES.STEP2.PICKING,
+      STEP_STATES.STEP2.SUCCESS,
+      STEP_STATES.STEP3.DELIVERING,
+    ].includes(order.status)
+  ).length;
   const completedCount = orders.filter(
     (order) => order.status === STEP_STATES.STEP3.DELIVERED
   ).length;
-  const failedCount = orders.filter((order) => {
-    return (
-      order.status === STEP_STATES.STEP1.REJECTED ||
-      order.status === STEP_STATES.STEP2.FAILED
-    );
-  }).length;
+  const failedCount = orders.filter((order) =>
+    [STEP_STATES.STEP1.REJECTED, STEP_STATES.STEP2.FAILED].includes(
+      order.status
+    )
+  ).length;
 
-  // 选项卡项
+  // 选项卡配置
   const tabItems = [
     {
       key: "all",
@@ -376,12 +353,27 @@ const OrderManagement = () => {
         items={tabItems}
         className="mb-4"
       />
-
+      <Button
+        onClick={refreshOrders}
+        type="primary"
+        style={{ marginBottom: 16 }}
+      >
+        刷新订单
+      </Button>
       <Table
         columns={columns}
         dataSource={filteredOrders}
         rowKey="id"
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: total,
+          showSizeChanger: true,
+          onChange: handleTableChange,
+          onShowSizeChange: handleTableChange,
+          showQuickJumper: true,
+        }}
+        loading={loading}
         locale={{ emptyText: "暂无订单数据" }}
       />
 
@@ -407,11 +399,7 @@ const OrderManagement = () => {
                   key="action"
                   type="primary"
                   onClick={() => {
-                    if (currentOrder.status === STEP_STATES.STEP1.WAITING) {
-                      handleProgressOrder(currentOrder.id);
-                    } else {
-                      handleProgressOrder(currentOrder.id);
-                    }
+                    handleProgressOrder(currentOrder.id);
                     setDetailModalVisible(false);
                   }}
                 >
@@ -433,6 +421,10 @@ const OrderManagement = () => {
                   <div className="space-y-3">
                     <p className="flex justify-between">
                       <span className="text-gray-600">订单号：</span>
+                      <span className="font-medium">{currentOrder.id}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-gray-600">取件码：</span>
                       <span className="font-medium">
                         {currentOrder.expressId}
                       </span>

@@ -14,7 +14,7 @@ import {
 } from "@ant-design/icons";
 import Logo from "@/assets/logo.png";
 import OUP from "@/assets/OUP.png";
-import { clearToken } from "@/utils";
+import { clearToken,clearRiderId } from "@/utils";
 
 const { Header, Sider, Content } = Layout;
 
@@ -26,6 +26,7 @@ const LayoutPage = () => {
   const confirm = () => {
     message.success("退出成功");
     clearToken();
+    clearRiderId();
     navigate("/login");
   };
 

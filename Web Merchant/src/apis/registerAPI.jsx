@@ -1,4 +1,6 @@
 import { http } from "@/utils/index";
+import { getRiderId } from "@/utils/index";
+import { useUserStore } from "@/store/useUserStore";
 
 const baseUrl = "http://26.81.202.205:8080";
 
@@ -31,6 +33,48 @@ export const fetchRegister = async (params) => {
     return {
       success: false,
       errorMsg: error.message || "登录失败，请稍后重试",
+      data: null,
+    };
+  }
+};
+
+export const fetchDToken = async () => {
+  const store = useUserStore.getState();
+
+  // 检查是否可以请求新的动态令牌
+  if (!store.canRequestNewDynamicToken()) {
+    return {
+      success: false,
+      errorMsg: "动态令牌仍在有效期内，请稍后再试",
+      data: store.dynamicToken,
+    };
+  }
+
+  const riderId = getRiderId(); // 获取骑手ID
+  try {
+    const response = await http({
+      method: "GET",
+      url: `${baseUrl}/shop/create`,
+      data: {
+        id: riderId,
+      },
+      auth: true, // 需要认证
+    });
+
+    if (response.data.success) {
+      // 存储新的动态令牌
+      store.setDynamicToken(response.data.data);
+    }
+
+    return response.data;
+  } catch (error) {
+    // 处理错误
+    console.error("获取失败:", error);
+
+    // 返回统一的错误格式
+    return {
+      success: false,
+      errorMsg: error.message || "获取失败，请稍后重试",
       data: null,
     };
   }

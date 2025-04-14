@@ -14,6 +14,7 @@ import {
   message,
   Spin,
   Space,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -24,14 +25,16 @@ import {
   SaveOutlined,
   ManOutlined,
   WomanOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
+import { fetchDToken } from "@/apis";
+import { getRiderId } from "@/utils";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// 模拟用户数据
 const mockUserData = {
-  avatar: rider, // 假设头像路径
+  avatar: rider,
   nickname: "骑手小王",
   gender: "male",
   age: 28,
@@ -47,11 +50,13 @@ const PersonalCenter = () => {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [showTokenBox, setShowTokenBox] = useState(false);
+  const [tokenText, setTokenText] = useState("");
 
-  // 模拟获取用户数据
+  const riderId = getRiderId();
+
   useEffect(() => {
     setLoading(true);
-    // 模拟API请求延迟
     setTimeout(() => {
       setUserData(mockUserData);
       setEditData({
@@ -63,10 +68,8 @@ const PersonalCenter = () => {
     }, 500);
   }, []);
 
-  // 处理编辑模式切换
   const handleEditToggle = () => {
     if (editing && hasChanges) {
-      // 如果正在编辑且有更改，询问是否放弃更改
       if (window.confirm("您有未保存的更改，确定要放弃吗？")) {
         setEditing(false);
         setEditData({
@@ -81,7 +84,6 @@ const PersonalCenter = () => {
     }
   };
 
-  // 处理输入变化
   const handleInputChange = (field, value) => {
     setEditData({
       ...editData,
@@ -90,10 +92,8 @@ const PersonalCenter = () => {
     setHasChanges(true);
   };
 
-  // 处理保存
   const handleSave = () => {
     setLoading(true);
-    // 模拟API请求
     setTimeout(() => {
       setUserData({
         ...userData,
@@ -106,7 +106,6 @@ const PersonalCenter = () => {
     }, 800);
   };
 
-  // 生成年龄选项
   const ageOptions = [];
   for (let i = 18; i <= 60; i++) {
     ageOptions.push(
@@ -115,6 +114,30 @@ const PersonalCenter = () => {
       </Option>
     );
   }
+
+  const handleGetDToken = async () => {
+    try {
+      const response = await fetchDToken();
+      if (response.success) {
+        setTokenText(response.data);
+        setShowTokenBox(true);
+        message.success("动态令牌获取成功");
+      } else {
+        message.error("动态令牌获取失败");
+      }
+    } catch (error) {
+      message.error("动态令牌获取失败");
+    }
+  };
+
+  const handleCopyToken = async () => {
+    try {
+      await navigator.clipboard.writeText(tokenText);
+      message.success("已复制到剪贴板");
+    } catch (err) {
+      message.error("复制失败");
+    }
+  };
 
   if (loading && !userData) {
     return (
@@ -155,9 +178,7 @@ const PersonalCenter = () => {
         </div>
 
         <div className="bg-gray-50 p-8 rounded-lg">
-          {/* 基本信息区域 */}
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-            {/* 头像 */}
             <div className="flex flex-col items-center">
               <Avatar
                 size={120}
@@ -176,10 +197,8 @@ const PersonalCenter = () => {
               </div>
             </div>
 
-            {/* 个人信息 */}
             <div className="flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* 可编辑信息 */}
                 <div className="space-y-4">
                   <div>
                     <Text type="secondary" className="block mb-1">
@@ -253,7 +272,6 @@ const PersonalCenter = () => {
                   </div>
                 </div>
 
-                {/* 不可编辑信息 */}
                 <div className="space-y-4">
                   <div>
                     <Text type="secondary" className="block mb-1">
@@ -280,7 +298,6 @@ const PersonalCenter = () => {
 
           <Divider />
 
-          {/* 统计数据 */}
           <div className="mt-8">
             <Title level={4}>工作统计</Title>
             <Row gutter={[24, 24]} className="mt-4">
@@ -320,11 +337,39 @@ const PersonalCenter = () => {
           </div>
         </div>
       </Card>
+
+      {/* 动态令牌区域 */}
+      {riderId <= 3 && (
+        <div className="mt-8">
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleGetDToken}
+          >
+            获取动态令牌
+          </Button>
+
+          {showTokenBox && (
+            <div className="mt-4 p-4 bg-gray-100 border rounded-md border-gray-400 flex items-center w-72">
+              <Text code className="text-base break-all">
+                {tokenText}
+              </Text>
+              <Button
+                type="link"
+                icon={<CopyOutlined />}
+                onClick={handleCopyToken}
+                className="ml-4"
+              >
+                复制
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-// 计算工作时长
 function calculateWorkDuration(employmentDate) {
   if (!employmentDate) return "";
 
