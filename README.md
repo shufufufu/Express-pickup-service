@@ -28,7 +28,8 @@ web 端：
 - taro：4.0.9
 - taroify：0.6.4
 - react：18
-- tailwindcss：
+- tailwindcss：3.4.1
+- zustand：4.4.1
 
 ##### 项目目录
 
