@@ -9,7 +9,7 @@ import {
   getNextStatus,
 } from "./components/STEP_STATES";
 import SimpleCountdown from "./components/Countdown";
-import { fetchOrder } from "@/apis"; // 根据实际路径调整引入
+import { fetchOrder, fetchUpdateStatus } from "@/apis"; // 根据实际路径调整引入
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]); // 订单数据
@@ -100,11 +100,32 @@ const OrderManagement = () => {
   };
 
   // 推进订单状态
-  const handleProgressOrder = (orderId) => {
+  const handleProgressOrder = async (orderId) => {
     const order = orders.find((o) => o.id === orderId);
-    if (order) {
-      const nextStatus = getNextStatus(order.status);
-      handleUpdateStatus(orderId, nextStatus);
+    if (!order) return;
+
+    try {
+      // 调用状态更新接口
+      const result = await fetchUpdateStatus({
+        orderId: orderId,
+      });
+
+      if (result) {
+        // 接口调用成功，前端自行更新状态
+        const nextStatus = getNextStatus(order.status);
+        setOrders((prevOrders) =>
+          prevOrders.map((o) =>
+            o.id === orderId ? { ...o, status: nextStatus } : o
+          )
+        );
+        message.success(`订单状态已更新为: ${getStatusDesc(nextStatus)}`);
+      } else {
+        // 接口调用失败
+        message.error("状态更新失败，请稍后重试");
+      }
+    } catch (error) {
+      console.error("更新状态出错:", error);
+      message.error("状态更新出错，请稍后重试");
     }
   };
 

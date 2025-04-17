@@ -28,7 +28,7 @@ import {
   CloseCircleOutlined,
 } from "@ant-design/icons";
 import { getStatusDesc, getStatusColor, STEP_STATES } from "./components/utils";
-import { fetchHistoryOrder } from "@/apis"; // 假设我们将接口函数放在这个位置
+import { fetchHistoryOrder, fetchPHistoryOrder } from "@/apis"; // 假设我们将接口函数放在这个位置
 import { getRiderId } from "@/utils/index"; // 获取骑手ID的函数
 import { generateMockOrders } from "./components/mockData"; // 模拟数据，可选使用
 
@@ -86,7 +86,11 @@ const HistoryOrders = () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
       } else {
         // 使用真实API
-        result = await fetchHistoryOrder(queryParams);
+        if (activeTab === "personal") {
+          result = await fetchPHistoryOrder(queryParams);
+        } else {
+          result = await fetchHistoryOrder(queryParams);
+        }
       }
 
       if (result.success) {
