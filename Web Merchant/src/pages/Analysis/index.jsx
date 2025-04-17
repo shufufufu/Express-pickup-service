@@ -33,10 +33,25 @@ const OrderAnalysis = () => {
   const [activeTab, setActiveTab] = useState("week");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [screenWidth, setScreenWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
 
   const lineChartRef = useRef(null);
   const statusPieRef = useRef(null);
   const timePieRef = useRef(null);
+
+  // 监听屏幕宽度变化
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // 获取数据
   useEffect(() => {
@@ -70,8 +85,11 @@ const OrderAnalysis = () => {
       timePieChart = init(timePieRef.current);
     }
 
-    // 检查是否有订单数据
+    // 检查是否有订单数据，所有图表都使用这个变量
     const hasOrders = data.totalOrders.some((value) => value > 0);
+
+    // 判断是否为小屏幕
+    const isSmallScreen = screenWidth < 768;
 
     // 设置折线图配置
     const lineOption = {
@@ -89,11 +107,16 @@ const OrderAnalysis = () => {
       legend: {
         data: ["总订单量", "已完成订单", "未成功订单"],
         bottom: 10,
+        // 不使用scroll模式，让图例自然换行
+        type: "plain",
+        // 减小图例项之间的间距
+        itemGap: 10,
       },
       grid: {
         left: "3%",
         right: "4%",
-        bottom: "15%",
+        // 为图例预留足够的空间，根据屏幕大小调整
+        bottom: isSmallScreen ? "25%" : "20%",
         top: "15%",
         containLabel: true,
       },
@@ -142,6 +165,9 @@ const OrderAnalysis = () => {
         text: "订单状态分布",
         left: "center",
         subtext: hasOrders ? "" : "暂无订单数据",
+        // 调整标题与图表的距离
+        top: 0,
+        bottom: 10,
       },
       tooltip: {
         trigger: "item",
@@ -149,14 +175,21 @@ const OrderAnalysis = () => {
       },
       legend: {
         orient: "horizontal",
-        bottom: 10,
+        // 将图例放在底部，预留足够空间
+        bottom: 0,
+        type: "plain",
+        // 减小图例项之间的间距
+        itemGap: 10,
         data: ["已完成订单", "未成功订单"],
       },
       series: [
         {
           name: "订单状态",
           type: "pie",
-          radius: ["40%", "70%"],
+          // 调整饼图的大小和位置，使其不会与图例重叠
+          radius: ["30%", "60%"],
+          // 将饼图向上移动，为底部图例腾出空间
+          center: ["50%", "45%"],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 10,
@@ -177,18 +210,21 @@ const OrderAnalysis = () => {
           labelLine: {
             show: false,
           },
-          data: [
-            {
-              value: data.completedOrders[0],
-              name: "已完成订单",
-              itemStyle: { color: "#91cc75" },
-            },
-            {
-              value: data.failedOrders[0],
-              name: "未成功订单",
-              itemStyle: { color: "#ee6666" },
-            },
-          ],
+          // 根据hasOrders条件决定是否显示数据
+          data: hasOrders
+            ? [
+                {
+                  value: data.completedOrders[0],
+                  name: "已完成订单",
+                  itemStyle: { color: "#91cc75" },
+                },
+                {
+                  value: data.failedOrders[0],
+                  name: "未成功订单",
+                  itemStyle: { color: "#ee6666" },
+                },
+              ]
+            : [],
         },
       ],
     };
@@ -199,6 +235,9 @@ const OrderAnalysis = () => {
         text: "订单时间分布",
         left: "center",
         subtext: hasOrders ? "" : "暂无订单数据",
+        // 调整标题与图表的距离
+        top: 0,
+        bottom: 10,
       },
       tooltip: {
         trigger: "item",
@@ -206,7 +245,18 @@ const OrderAnalysis = () => {
       },
       legend: {
         orient: "horizontal",
-        bottom: 10,
+        // 将图例放在底部，预留足够空间
+        bottom: 0,
+        type: "plain",
+        // 减小图例项之间的间距
+        itemGap: isSmallScreen ? 5 : 10,
+        // 小屏幕时减小图例标记的大小
+        itemWidth: isSmallScreen ? 15 : 25,
+        itemHeight: isSmallScreen ? 10 : 14,
+        // 小屏幕时减小字体大小
+        textStyle: {
+          fontSize: isSmallScreen ? 10 : 12,
+        },
         data: [
           "凌晨 (0-4点)",
           "早晨 (4-8点)",
@@ -220,7 +270,10 @@ const OrderAnalysis = () => {
         {
           name: "下单时间",
           type: "pie",
-          radius: ["40%", "70%"],
+          // 调整饼图的大小和位置，使其不会与图例重叠
+          radius: ["30%", "60%"],
+          // 将饼图向上移动，为底部图例腾出空间
+          center: ["50%", "45%"],
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 10,
@@ -241,30 +294,32 @@ const OrderAnalysis = () => {
           labelLine: {
             show: false,
           },
-          data: data.timeDistribution[0].map((value, index) => {
-            const timeLabels = [
-              "凌晨 (0-4点)",
-              "早晨 (4-8点)",
-              "上午 (8-12点)",
-              "下午 (12-16点)",
-              "傍晚 (16-20点)",
-              "晚上 (20-24点)",
-            ];
-            const colors = [
-              "#5470c6",
-              "#91cc75",
-              "#fac858",
-              "#ee6666",
-              "#73c0de",
-              "#3ba272",
-            ];
+          data: hasOrders
+            ? data.timeDistribution[0].map((value, index) => {
+                const timeLabels = [
+                  "凌晨 (0-4点)",
+                  "早晨 (4-8点)",
+                  "上午 (8-12点)",
+                  "下午 (12-16点)",
+                  "傍晚 (16-20点)",
+                  "晚上 (20-24点)",
+                ];
+                const colors = [
+                  "#5470c6",
+                  "#91cc75",
+                  "#fac858",
+                  "#ee6666",
+                  "#73c0de",
+                  "#3ba272",
+                ];
 
-            return {
-              value,
-              name: timeLabels[index],
-              itemStyle: { color: colors[index] },
-            };
-          }),
+                return {
+                  value,
+                  name: timeLabels[index],
+                  itemStyle: { color: colors[index] },
+                };
+              })
+            : [],
         },
       ],
     };
@@ -305,6 +360,7 @@ const OrderAnalysis = () => {
           ],
           title: {
             text: `订单状态分布 (${data.dates[dimension]})`,
+            subtext: hasDimensionOrders ? "" : "暂无订单数据",
           },
         });
 
@@ -360,7 +416,7 @@ const OrderAnalysis = () => {
       statusPieChart.dispose();
       timePieChart.dispose();
     };
-  }, [data, loading]);
+  }, [data, loading, screenWidth]);
 
   // 处理标签页切换
   const handleTabChange = (key) => {
@@ -385,8 +441,9 @@ const OrderAnalysis = () => {
           <div className="w-full h-[300px]" ref={lineChartRef} />
 
           <div className="flex flex-col md:flex-row mt-6">
-            <div className="w-full md:w-1/2 h-[300px]" ref={statusPieRef} />
-            <div className="w-full md:w-1/2 h-[300px]" ref={timePieRef} />
+            {/* 增加容器高度，为图例预留更多空间 */}
+            <div className="w-full md:w-1/2 h-[350px]" ref={statusPieRef} />
+            <div className="w-full md:w-1/2 h-[350px]" ref={timePieRef} />
           </div>
         </div>
       )}
