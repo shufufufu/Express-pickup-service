@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Card,
   Tabs,
@@ -15,7 +15,7 @@ import {
   Popconfirm,
   Space,
   Badge,
-} from "antd"
+} from "antd";
 import {
   NotificationOutlined,
   CalendarOutlined,
@@ -24,84 +24,87 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
-} from "@ant-design/icons"
-import { generateMockAnnouncements } from "./components/mockData"
+} from "@ant-design/icons";
+import { generateMockAnnouncements } from "./components/mockData";
 
-const { TabPane } = Tabs
-const { RangePicker } = DatePicker
-const { TextArea } = Input
-const { Title, Text, Paragraph } = Typography
+const { TabPane } = Tabs;
+const { RangePicker } = DatePicker;
+const { TextArea } = Input;
+const { Title, Text, Paragraph } = Typography;
 
 const AnnouncementPage = () => {
-  const [activeTab, setActiveTab] = useState("publish")
-  const [announcements, setAnnouncements] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [form] = Form.useForm()
-  const [messageApi, contextHolder] = message.useMessage()
+  const [activeTab, setActiveTab] = useState("publish");
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 获取公告数据
   useEffect(() => {
     if (activeTab === "history") {
-      fetchAnnouncements()
+      fetchAnnouncements();
     }
-  }, [activeTab])
+  }, [activeTab]);
 
   const fetchAnnouncements = () => {
-    setLoading(true)
+    setLoading(true);
     // 模拟API请求
     setTimeout(() => {
-      const data = generateMockAnnouncements()
-      setAnnouncements(data)
-      setLoading(false)
-    }, 800)
-  }
+      const data = generateMockAnnouncements();
+      setAnnouncements(data);
+      setLoading(false);
+    }, 800);
+  };
 
   // 处理发布公告
   const handlePublish = (values) => {
-    setSubmitting(true)
+    setSubmitting(true);
 
     // 格式化日期范围
     const formattedValues = {
       ...values,
-      displayPeriod: [values.displayPeriod[0].format("YYYY-MM-DD"), values.displayPeriod[1].format("YYYY-MM-DD")],
-    }
+      displayPeriod: [
+        values.displayPeriod[0].format("YYYY-MM-DD"),
+        values.displayPeriod[1].format("YYYY-MM-DD"),
+      ],
+    };
 
     // 模拟API请求
     setTimeout(() => {
-      console.log("发布公告:", formattedValues)
-      messageApi.success("公告发布成功！")
-      form.resetFields()
-      setSubmitting(false)
+      console.log("发布公告:", formattedValues);
+      messageApi.success("公告发布成功！");
+      form.resetFields();
+      setSubmitting(false);
 
       // 如果用户在历史标签页发布，刷新列表
       if (activeTab === "history") {
-        fetchAnnouncements()
+        fetchAnnouncements();
       }
-    }, 1000)
-  }
+    }, 1000);
+  };
 
   // 处理删除公告
   const handleDelete = (id) => {
-    setLoading(true)
+    setLoading(true);
     // 模拟API请求
     setTimeout(() => {
-      setAnnouncements((prev) => prev.filter((item) => item.id !== id))
-      messageApi.success("公告已删除")
-      setLoading(false)
-    }, 500)
-  }
+      setAnnouncements((prev) => prev.filter((item) => item.id !== id));
+      messageApi.success("公告已删除");
+      setLoading(false);
+    }, 500);
+  };
 
   // 判断公告是否过期
   const isExpired = (endDate) => {
-    return new Date(endDate) < new Date()
-  }
+    return new Date(endDate) < new Date();
+  };
 
   // 判断公告是否当前展示
   const isActive = (startDate, endDate) => {
-    const now = new Date()
-    return new Date(startDate) <= now && new Date(endDate) >= now
-  }
+    const now = new Date();
+    return new Date(startDate) <= now && new Date(endDate) >= now;
+  };
 
   return (
     <Card title="公告管理" className="shadow-md">
@@ -119,7 +122,7 @@ const AnnouncementPage = () => {
         <TabPane
           tab={
             <span>
-              <HistoryOutlined className="mr-1"/>
+              <HistoryOutlined className="mr-1" />
               往期公告
             </span>
           }
@@ -138,13 +141,31 @@ const AnnouncementPage = () => {
               </div>
             }
           >
-            <Form form={form} layout="vertical" onFinish={handlePublish} requiredMark={false}>
-              <Form.Item name="title" label="公告标题" rules={[{ required: true, message: "请输入公告标题" }]}>
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handlePublish}
+              requiredMark={false}
+            >
+              <Form.Item
+                name="title"
+                label="公告标题"
+                rules={[{ required: true, message: "请输入公告标题" }]}
+              >
                 <Input placeholder="请输入公告标题" maxLength={20} showCount />
               </Form.Item>
 
-              <Form.Item name="content" label="公告内容" rules={[{ required: true, message: "请输入公告内容" }]}>
-                <TextArea placeholder="请输入公告内容..." rows={6} maxLength={150} showCount />
+              <Form.Item
+                name="content"
+                label="公告内容"
+                rules={[{ required: true, message: "请输入公告内容" }]}
+              >
+                <TextArea
+                  placeholder="请输入公告内容..."
+                  rows={6}
+                  maxLength={150}
+                  showCount
+                />
               </Form.Item>
 
               <Form.Item
@@ -152,7 +173,10 @@ const AnnouncementPage = () => {
                 label="展示时间段"
                 rules={[{ required: true, message: "请选择展示时间段" }]}
               >
-                <RangePicker style={{ width: "100%" }} placeholder={["开始日期", "结束日期"]} />
+                <RangePicker
+                  style={{ width: "100%" }}
+                  placeholder={["开始日期", "结束日期"]}
+                />
               </Form.Item>
 
               <Form.Item>
@@ -203,7 +227,12 @@ const AnnouncementPage = () => {
                         okText="确定"
                         cancelText="取消"
                       >
-                        <Button type="text" icon={<DeleteOutlined />} danger size="small">
+                        <Button
+                          type="text"
+                          icon={<DeleteOutlined />}
+                          danger
+                          size="small"
+                        >
                           删除
                         </Button>
                       </Popconfirm>
@@ -213,8 +242,8 @@ const AnnouncementPage = () => {
                     isActive(item.startDate, item.endDate)
                       ? "border-l-4 border-green-500 bg-green-50"
                       : isExpired(item.endDate)
-                        ? "border-l-4 border-gray-300 bg-gray-50"
-                        : "border-l-4 border-blue-500 bg-blue-50"
+                      ? "border-l-4 border-gray-300 bg-gray-50"
+                      : "border-l-4 border-blue-500 bg-blue-50"
                   }`}
                 >
                   <div className="flex justify-between items-start">
@@ -226,16 +255,28 @@ const AnnouncementPage = () => {
                     </div>
                     <div>
                       {isActive(item.startDate, item.endDate) ? (
-                        <Badge status="success" text={<Tag color="success">当前展示中</Tag>} />
+                        <Badge
+                          status="success"
+                          text={<Tag color="success">当前展示中</Tag>}
+                        />
                       ) : isExpired(item.endDate) ? (
-                        <Badge status="default" text={<Tag color="default">已过期</Tag>} />
+                        <Badge
+                          status="default"
+                          text={<Tag color="default">已过期</Tag>}
+                        />
                       ) : (
-                        <Badge status="processing" text={<Tag color="processing">待展示</Tag>} />
+                        <Badge
+                          status="processing"
+                          text={<Tag color="processing">待展示</Tag>}
+                        />
                       )}
                     </div>
                   </div>
 
-                  <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: "展开" }} className="mt-3 text-gray-700">
+                  <Paragraph
+                    ellipsis={{ rows: 2, expandable: true, symbol: "展开" }}
+                    className="mt-3 text-gray-700"
+                  >
                     {item.content}
                   </Paragraph>
 
@@ -252,8 +293,7 @@ const AnnouncementPage = () => {
         </div>
       )}
     </Card>
-  )
-}
+  );
+};
 
-export default AnnouncementPage
-
+export default AnnouncementPage;

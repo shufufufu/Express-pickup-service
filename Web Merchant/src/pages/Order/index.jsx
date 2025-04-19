@@ -9,7 +9,13 @@ import {
   getNextStatus,
 } from "./components/STEP_STATES";
 import SimpleCountdown from "./components/Countdown";
-import { fetchOrder, fetchUpdateStatus } from "@/apis"; // 根据实际路径调整引入
+import {
+  fetchOrder,
+  fetchUpdateStatus,
+  fetchGrabStatus,
+  fetchRejectStatus,
+  fetchPickFail,
+} from "@/apis"; // 根据实际路径调整引入
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]); // 订单数据
@@ -101,14 +107,22 @@ const OrderManagement = () => {
 
   // 推进订单状态
   const handleProgressOrder = async (orderId) => {
+    // 检查订单状态
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
     try {
       // 调用状态更新接口
-      const result = await fetchUpdateStatus({
-        orderId: orderId,
-      });
+      let result;
+      if (order.status === STEP_STATES.STEP1.WAITING) {
+        result = await fetchGrabStatus({
+          orderId: orderId,
+        });
+      } else {
+        result = await fetchUpdateStatus({
+          orderId: orderId,
+        });
+      }
 
       if (result) {
         // 接口调用成功，前端自行更新状态
@@ -129,15 +143,39 @@ const OrderManagement = () => {
     }
   };
 
+  const grabOrders = async (orderId) => {
+    try {
+      const result = await fetchRejectStatus({ orderId }); // 调用抢单接口
+      if (result.success) {
+        handleUpdateStatus(orderId, STEP_STATES.STEP1.REJECTED);
+      }
+    } catch (error) {
+      console.error("拒单失败:", error);
+      message.error("拒单失败，请稍后重试");
+    }
+  };
+
   // 处理拒单
   const handleRejectOrder = (orderId) => {
     Modal.confirm({
       title: "确认拒单",
       content: "您确定要拒绝这个订单吗？",
       onOk() {
-        handleUpdateStatus(orderId, STEP_STATES.STEP1.REJECTED);
+        grabOrders(orderId); // 调用抢单接口
       },
     });
+  };
+
+  const pickFailed = async (orderId) => {
+    try {
+      const result = await fetchPickFail({ orderId });
+      if (result.success) {
+        handleUpdateStatus(orderId, STEP_STATES.STEP2.FAILED);
+      }
+    } catch (error) {
+      console.error("取件失败:", error);
+      message.error("取件失败，请稍后重试");
+    }
   };
 
   // 处理取件失败
@@ -146,7 +184,7 @@ const OrderManagement = () => {
       title: "确认取件失败",
       content: "您确定要标记此订单为取件失败吗？",
       onOk() {
-        handleUpdateStatus(orderId, STEP_STATES.STEP2.FAILED);
+        pickFailed(orderId); // 调用取件失败接口
       },
     });
   };
