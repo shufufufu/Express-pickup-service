@@ -8,3 +8,4 @@ export {
   fetchRejectStatus,
   fetchPickFail,
 } from "./updateStatusAPI";
+export { fetchRiderInfo, fetchChangeRiderInfo } from "./riderAPI";

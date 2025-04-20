@@ -1,6 +1,16 @@
 // OrderManagement.jsx
 import React, { useState, useEffect } from "react";
-import { Table, Card, Tabs, Tag, Button, Modal, message, Space } from "antd";
+import {
+  Table,
+  Card,
+  Tabs,
+  Tag,
+  Button,
+  Modal,
+  message,
+  Space,
+  Popover,
+} from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import {
   STEP_STATES,
@@ -9,6 +19,7 @@ import {
   getNextStatus,
 } from "./components/STEP_STATES";
 import SimpleCountdown from "./components/Countdown";
+import { ReloadOutlined } from "@ant-design/icons";
 import {
   fetchOrder,
   fetchUpdateStatus,
@@ -23,6 +34,7 @@ const OrderManagement = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState({}); // 记录每个订单的操作加载状态
 
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,17 +44,22 @@ const OrderManagement = () => {
   // 加载订单数据（包含分页参数）
   const loadOrders = async (extraParams = {}) => {
     setLoading(true);
-    const result = await fetchOrder({
-      page: currentPage,
-      pageSize,
-      ...extraParams,
-    });
-    setLoading(false);
-    if (result.success) {
-      setOrders(result.data.orders);
-      setTotal(result.data.totalPage);
-    } else {
-      message.error(`订单获取失败: ${result.errorMsg}`);
+    try {
+      const result = await fetchOrder({
+        page: currentPage,
+        pageSize,
+        ...extraParams,
+      });
+      setLoading(false);
+      if (result.success) {
+        setOrders(result.data.orders);
+        setTotal(result.data.totalPage);
+      } else {
+        message.error(`订单获取失败: ${result.errorMsg}`);
+      }
+    } catch (error) {
+      setLoading(false);
+      message.error(`订单获取失败: ${error.message || "未知错误"}`);
     }
   };
 
@@ -57,7 +74,7 @@ const OrderManagement = () => {
     setPageSize(newPageSize);
   };
 
-  // 根据订单状态（本示例依然在前端根据 activeTab 过滤，如果后端提供过滤参数，可在 loadOrders 时传入）
+  // 根据订单状态过滤
   const getFilteredOrders = () => {
     switch (activeTab) {
       case "waiting":
@@ -95,7 +112,7 @@ const OrderManagement = () => {
     loadOrders();
   };
 
-  // 模拟更新订单状态，如有需要，可调用真实接口更新
+  // 直接更新订单状态（本地更新）
   const handleUpdateStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
@@ -105,26 +122,38 @@ const OrderManagement = () => {
     message.success(`订单状态已更新为: ${getStatusDesc(newStatus)}`);
   };
 
+  // 设置订单操作的加载状态
+  const setOrderActionLoading = (orderId, isLoading) => {
+    setActionLoading((prev) => ({
+      ...prev,
+      [orderId]: isLoading,
+    }));
+  };
+
   // 推进订单状态
   const handleProgressOrder = async (orderId) => {
     // 检查订单状态
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
+    setOrderActionLoading(orderId, true);
+
     try {
       // 调用状态更新接口
       let result;
       if (order.status === STEP_STATES.STEP1.WAITING) {
+        // 待接单状态，调用抢单接口
         result = await fetchGrabStatus({
           orderId: orderId,
         });
       } else {
+        // 其他状态，调用普通状态更新接口
         result = await fetchUpdateStatus({
           orderId: orderId,
         });
       }
 
-      if (result) {
+      if (result.success) {
         // 接口调用成功，前端自行更新状态
         const nextStatus = getNextStatus(order.status);
         setOrders((prevOrders) =>
@@ -135,23 +164,13 @@ const OrderManagement = () => {
         message.success(`订单状态已更新为: ${getStatusDesc(nextStatus)}`);
       } else {
         // 接口调用失败
-        message.error("状态更新失败，请稍后重试");
+        message.error(result.errorMsg || "状态更新失败，请稍后重试");
       }
     } catch (error) {
       console.error("更新状态出错:", error);
       message.error("状态更新出错，请稍后重试");
-    }
-  };
-
-  const grabOrders = async (orderId) => {
-    try {
-      const result = await fetchRejectStatus({ orderId }); // 调用抢单接口
-      if (result.success) {
-        handleUpdateStatus(orderId, STEP_STATES.STEP1.REJECTED);
-      }
-    } catch (error) {
-      console.error("拒单失败:", error);
-      message.error("拒单失败，请稍后重试");
+    } finally {
+      setOrderActionLoading(orderId, false);
     }
   };
 
@@ -160,22 +179,24 @@ const OrderManagement = () => {
     Modal.confirm({
       title: "确认拒单",
       content: "您确定要拒绝这个订单吗？",
-      onOk() {
-        grabOrders(orderId); // 调用抢单接口
+      onOk: async () => {
+        setOrderActionLoading(orderId, true);
+        try {
+          const result = await fetchRejectStatus({ orderId });
+
+          if (result.success) {
+            handleUpdateStatus(orderId, STEP_STATES.STEP1.REJECTED);
+          } else {
+            message.error(result.errorMsg || "拒单失败，请稍后重试");
+          }
+        } catch (error) {
+          console.error("拒单失败:", error);
+          message.error("拒单失败，请稍后重试");
+        } finally {
+          setOrderActionLoading(orderId, false);
+        }
       },
     });
-  };
-
-  const pickFailed = async (orderId) => {
-    try {
-      const result = await fetchPickFail({ orderId });
-      if (result.success) {
-        handleUpdateStatus(orderId, STEP_STATES.STEP2.FAILED);
-      }
-    } catch (error) {
-      console.error("取件失败:", error);
-      message.error("取件失败，请稍后重试");
-    }
   };
 
   // 处理取件失败
@@ -183,8 +204,24 @@ const OrderManagement = () => {
     Modal.confirm({
       title: "确认取件失败",
       content: "您确定要标记此订单为取件失败吗？",
-      onOk() {
-        pickFailed(orderId); // 调用取件失败接口
+      onOk: async () => {
+        setOrderActionLoading(orderId, true);
+        try {
+          const result = await fetchPickFail({ orderId });
+
+          if (result.success) {
+            handleUpdateStatus(orderId, STEP_STATES.STEP2.FAILED);
+          } else {
+            message.error(
+              result.errorMsg || "标记取件失败操作失败，请稍后重试"
+            );
+          }
+        } catch (error) {
+          console.error("取件失败操作出错:", error);
+          message.error("取件失败操作出错，请稍后重试");
+        } finally {
+          setOrderActionLoading(orderId, false);
+        }
       },
     });
   };
@@ -197,12 +234,15 @@ const OrderManagement = () => {
 
   // 根据订单状态返回操作按钮
   const getActionButtons = (order) => {
+    const isLoading = actionLoading[order.id] || false;
+
     const buttons = [
       <Button
         key="view"
         type="link"
         icon={<EyeOutlined />}
         onClick={() => showOrderDetail(order)}
+        disabled={isLoading}
       >
         查看详情
       </Button>,
@@ -216,6 +256,8 @@ const OrderManagement = () => {
             type="primary"
             size="small"
             onClick={() => handleProgressOrder(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             接单
           </Button>,
@@ -224,6 +266,8 @@ const OrderManagement = () => {
             danger
             size="small"
             onClick={() => handleRejectOrder(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             拒单
           </Button>
@@ -236,6 +280,8 @@ const OrderManagement = () => {
             type="primary"
             size="small"
             onClick={() => handleProgressOrder(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             开始取件
           </Button>
@@ -248,6 +294,8 @@ const OrderManagement = () => {
             type="primary"
             size="small"
             onClick={() => handleProgressOrder(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             已取到件
           </Button>,
@@ -256,6 +304,8 @@ const OrderManagement = () => {
             danger
             size="small"
             onClick={() => handlePickupFailed(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             取件失败
           </Button>
@@ -268,6 +318,8 @@ const OrderManagement = () => {
             type="primary"
             size="small"
             onClick={() => handleProgressOrder(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             开始配送
           </Button>
@@ -280,6 +332,8 @@ const OrderManagement = () => {
             type="primary"
             size="small"
             onClick={() => handleProgressOrder(order.id)}
+            loading={isLoading}
+            disabled={isLoading}
           >
             确认送达
           </Button>
@@ -359,7 +413,7 @@ const OrderManagement = () => {
     },
   ];
 
-  // 计算各状态订单数量（这里还是前端统计，如果需要后端统计可通过接口返回）
+  // 计算各状态订单数量
   const waitingCount = orders.filter(
     (order) => order.status === STEP_STATES.STEP1.WAITING
   ).length;
@@ -412,13 +466,6 @@ const OrderManagement = () => {
         items={tabItems}
         className="mb-4"
       />
-      <Button
-        onClick={refreshOrders}
-        type="primary"
-        style={{ marginBottom: 16 }}
-      >
-        刷新订单
-      </Button>
       <Table
         columns={columns}
         dataSource={filteredOrders}
@@ -457,6 +504,7 @@ const OrderManagement = () => {
                 <Button
                   key="action"
                   type="primary"
+                  loading={actionLoading[currentOrder.id]}
                   onClick={() => {
                     handleProgressOrder(currentOrder.id);
                     setDetailModalVisible(false);
@@ -553,6 +601,19 @@ const OrderManagement = () => {
           </div>
         </Modal>
       )}
+      {/* 右下角浮动按钮 */}
+      <div className="fixed right-16 top-40 flex flex-col space-y-4">
+        <Popover content={<span>刷新订单</span>} trigger="hover">
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<ReloadOutlined />}
+            size="large"
+            onClick={refreshOrders}
+            className="bg-blue-400 border-blue-400 hover:bg-blue-600 hover:border-blue-700 hover:scale-105 transform-all duration-300"
+          />
+        </Popover>
+      </div>
     </Card>
   );
 };

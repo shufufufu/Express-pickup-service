@@ -15,6 +15,7 @@ import {
   Spin,
   Space,
   Modal,
+  Form,
 } from "antd";
 import {
   UserOutlined,
@@ -26,23 +27,13 @@ import {
   ManOutlined,
   WomanOutlined,
   CopyOutlined,
+  PhoneOutlined,
 } from "@ant-design/icons";
-import { fetchDToken } from "@/apis";
+import { fetchDToken, fetchRiderInfo, fetchChangeRiderInfo } from "@/apis";
 import { getRiderId } from "@/utils";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-
-const mockUserData = {
-  avatar: rider,
-  nickname: "骑手小王",
-  gender: "male",
-  age: 28,
-  riderId: "R10086",
-  employmentDate: "2023-06-15",
-  deliveredOrders: 1568,
-  rating: 5.0,
-};
 
 const PersonalCenter = () => {
   const [userData, setUserData] = useState(null);
@@ -52,35 +43,78 @@ const PersonalCenter = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [showTokenBox, setShowTokenBox] = useState(false);
   const [tokenText, setTokenText] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
 
   const riderId = getRiderId();
 
-  useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setUserData(mockUserData);
-      setEditData({
-        nickname: mockUserData.nickname,
-        gender: mockUserData.gender,
-        age: mockUserData.age,
-      });
+  // 获取用户数据
+  const getUserData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchRiderInfo();
+      if (res.success) {
+        // 处理性别字段，后端 0=女，1=男
+        const genderValue = res.data.gender === 0 ? "female" : "male";
+
+        const userData = {
+          ...res.data,
+          gender: genderValue,
+          avatar: rider, // 使用提供的rider图片作为头像
+          deliveredOrders: res.data.doneNumber || 0, // 总订单数
+          weekDeliveredOrders: res.data.weekDoneNumber || 0, // 本周订单数
+        };
+
+        setUserData(userData);
+
+        // 初始化编辑数据
+        setEditData({
+          name: userData.name,
+          gender: genderValue,
+          age: userData.age,
+          phone: userData.phone,
+        });
+      } else {
+        message.error(res.errorMsg || "获取用户信息失败");
+      }
+    } catch (error) {
+      console.error("获取用户信息出错:", error);
+      message.error("获取用户信息失败，请稍后重试");
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  useEffect(() => {
+    getUserData();
   }, []);
 
   const handleEditToggle = () => {
     if (editing && hasChanges) {
-      if (window.confirm("您有未保存的更改，确定要放弃吗？")) {
-        setEditing(false);
-        setEditData({
-          nickname: userData.nickname,
-          gender: userData.gender,
-          age: userData.age,
-        });
-        setHasChanges(false);
-      }
+      Modal.confirm({
+        title: "确认取消",
+        content: "您有未保存的更改，确定要放弃吗？",
+        onOk: () => {
+          setEditing(false);
+          setEditData({
+            name: userData.name,
+            gender: userData.gender,
+            age: userData.age,
+            phone: userData.phone,
+          });
+          setHasChanges(false);
+        },
+      });
     } else {
       setEditing(!editing);
+      if (!editing) {
+        // 进入编辑模式时，初始化编辑数据
+        setEditData({
+          name: userData.name,
+          gender: userData.gender,
+          age: userData.age,
+          phone: userData.phone,
+        });
+      }
     }
   };
 
@@ -92,18 +126,43 @@ const PersonalCenter = () => {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setUserData({
-        ...userData,
-        ...editData,
+  // 保存用户信息
+  const handleSave = async () => {
+    try {
+      setSaveLoading(true);
+
+      // 转换性别为后端格式（0=女，1=男）
+      const genderValue = editData.gender === "female" ? 0 : 1;
+
+      // 调用修改用户信息接口
+      const res = await fetchChangeRiderInfo({
+        name: editData.name,
+        gender: genderValue, // 转换为后端格式
+        age: editData.age,
+        phone: editData.phone,
       });
-      setEditing(false);
-      setHasChanges(false);
-      setLoading(false);
-      message.success("个人信息已更新");
-    }, 800);
+
+      if (res.success) {
+        // 更新本地数据
+        setUserData({
+          ...userData,
+          name: editData.name,
+          gender: editData.gender, // 前端格式
+          age: editData.age,
+          phone: editData.phone,
+        });
+        setEditing(false);
+        setHasChanges(false);
+        message.success("个人信息已更新");
+      } else {
+        message.error(res.errorMsg || "更新个人信息失败");
+      }
+    } catch (error) {
+      console.error("更新个人信息出错:", error);
+      message.error("更新个人信息失败，请稍后重试");
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const ageOptions = [];
@@ -123,10 +182,11 @@ const PersonalCenter = () => {
         setShowTokenBox(true);
         message.success("动态令牌获取成功");
       } else {
-        message.error("动态令牌获取失败");
+        message.error(response.errorMsg || "动态令牌获取失败");
       }
     } catch (error) {
-      message.error("动态令牌获取失败");
+      console.error("获取动态令牌出错:", error);
+      message.error("动态令牌获取失败，请稍后重试");
     }
   };
 
@@ -135,6 +195,7 @@ const PersonalCenter = () => {
       await navigator.clipboard.writeText(tokenText);
       message.success("已复制到剪贴板");
     } catch (err) {
+      console.error("复制失败:", err);
       message.error("复制失败");
     }
   };
@@ -170,6 +231,7 @@ const PersonalCenter = () => {
                 icon={<SaveOutlined />}
                 onClick={handleSave}
                 disabled={!hasChanges}
+                loading={saveLoading}
               >
                 保存更改
               </Button>
@@ -182,7 +244,7 @@ const PersonalCenter = () => {
             <div className="flex flex-col items-center">
               <Avatar
                 size={120}
-                src={userData?.avatar || "/placeholder.svg"}
+                src={userData?.avatar}
                 icon={<UserOutlined />}
                 className="border-4 border-white shadow-lg"
               />
@@ -192,7 +254,7 @@ const PersonalCenter = () => {
                 </Text>
                 <div className="flex items-center justify-center mt-1">
                   <StarFilled className="text-yellow-500 mr-1" />
-                  <Text>{userData?.rating}</Text>
+                  <Text>{userData?.favor}</Text>
                 </div>
               </div>
             </div>
@@ -206,16 +268,16 @@ const PersonalCenter = () => {
                     </Text>
                     {editing ? (
                       <Input
-                        value={editData.nickname}
+                        value={editData.name}
                         onChange={(e) =>
-                          handleInputChange("nickname", e.target.value)
+                          handleInputChange("name", e.target.value)
                         }
                         placeholder="请输入昵称"
                         maxLength={20}
                       />
                     ) : (
                       <Text strong className="text-lg">
-                        {userData?.nickname}
+                        {userData?.name}
                       </Text>
                     )}
                   </div>
@@ -275,11 +337,33 @@ const PersonalCenter = () => {
                 <div className="space-y-4">
                   <div>
                     <Text type="secondary" className="block mb-1">
+                      联系电话
+                    </Text>
+                    {editing ? (
+                      <Input
+                        value={editData.phone}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
+                        placeholder="请输入联系电话"
+                        maxLength={11}
+                        addonBefore={<PhoneOutlined />}
+                      />
+                    ) : (
+                      <div className="flex items-center">
+                        <PhoneOutlined className="mr-2 text-gray-500" />
+                        <Text>{userData?.phone}</Text>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <Text type="secondary" className="block mb-1">
                       入职日期
                     </Text>
                     <div className="flex items-center">
                       <CalendarOutlined className="mr-2 text-gray-500" />
-                      <Text>{userData?.employmentDate}</Text>
+                      <Text>{userData?.joinTime}</Text>
                     </div>
                   </div>
 
@@ -287,9 +371,7 @@ const PersonalCenter = () => {
                     <Text type="secondary" className="block mb-1">
                       工作时长
                     </Text>
-                    <Text>
-                      {calculateWorkDuration(userData?.employmentDate)}
-                    </Text>
+                    <Text>{calculateWorkDuration(userData?.joinTime)}</Text>
                   </div>
                 </div>
               </div>
@@ -314,8 +396,8 @@ const PersonalCenter = () => {
               <Col xs={24} sm={12} md={8}>
                 <Card className="text-center hover:shadow-md transition-shadow">
                   <Statistic
-                    title="本月配送"
-                    value={Math.floor(userData?.deliveredOrders * 0.12)}
+                    title="本周配送"
+                    value={userData?.weekDeliveredOrders}
                     prefix={<ShoppingOutlined />}
                     valueStyle={{ color: "#52c41a" }}
                   />
@@ -325,7 +407,7 @@ const PersonalCenter = () => {
                 <Card className="text-center hover:shadow-md transition-shadow">
                   <Statistic
                     title="用户评分"
-                    value={userData?.rating}
+                    value={userData?.favor}
                     precision={1}
                     prefix={<StarFilled />}
                     suffix="/ 5"
@@ -370,10 +452,10 @@ const PersonalCenter = () => {
   );
 };
 
-function calculateWorkDuration(employmentDate) {
-  if (!employmentDate) return "";
+function calculateWorkDuration(joinTime) {
+  if (!joinTime) return "";
 
-  const startDate = new Date(employmentDate);
+  const startDate = new Date(joinTime);
   const today = new Date();
 
   const yearDiff = today.getFullYear() - startDate.getFullYear();

@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout, Menu, Button, Popconfirm, message } from "antd";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import {
   FileTextOutlined,
   LogoutOutlined,
-  QuestionCircleOutlined,
-  MessageOutlined,
   PieChartOutlined,
   BarsOutlined,
   CommentOutlined,
@@ -14,7 +12,8 @@ import {
 } from "@ant-design/icons";
 import Logo from "@/assets/logo.png";
 import OUP from "@/assets/OUP.png";
-import { clearToken,clearRiderId } from "@/utils";
+import { clearToken, clearRiderId } from "@/utils";
+import { fetchRiderInfo } from "@/apis";
 
 const { Header, Sider, Content } = Layout;
 
@@ -22,6 +21,21 @@ const LayoutPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [riderName, setRiderName] = useState("未登录");
+
+  const getRiderName = async () => {
+    const res = await fetchRiderInfo();
+    if (res.success) {
+      if (res.data.name === null) {
+        message.error("骑手姓名未设置，请先设置");
+        navigate("/riderinfo");
+        setRiderName("未设置");
+      }
+      setRiderName(res.data.name);
+    } else {
+      message.error(res.errorMsg);
+    }
+  };
 
   const confirm = () => {
     message.success("退出成功");
@@ -29,6 +43,10 @@ const LayoutPage = () => {
     clearRiderId();
     navigate("/login");
   };
+
+  useEffect(() => {
+    getRiderName();
+  });
 
   return (
     <Layout className="min-h-screen">
@@ -45,7 +63,7 @@ const LayoutPage = () => {
             className="text-white mr-4 text-lg hover:scale-125 hover:text-sky-300 transform-all duration-300 cursor-pointer"
             onClick={() => navigate("/riderinfo")}
           >
-            SHUFU
+            {riderName}
           </div>
           <Popconfirm
             title="提示"
@@ -143,26 +161,6 @@ const LayoutPage = () => {
           </Content>
         </Layout>
       </Layout>
-
-      {/* 右下角浮动按钮 */}
-      <div className="fixed right-6 bottom-6 flex flex-col space-y-4">
-        <Button
-          type="primary"
-          shape="circle"
-          icon={<MessageOutlined />}
-          size="large"
-          className="bg-pink-400 border-pink-400 hover:bg-pink-500 hover:border-pink-500"
-          style={{ backgroundColor: "#f06292", borderColor: "#f06292" }}
-        />
-        <Button
-          type="primary"
-          shape="circle"
-          icon={<QuestionCircleOutlined />}
-          size="large"
-          className="bg-purple-500 border-purple-500 hover:bg-purple-600 hover:border-purple-600"
-          style={{ backgroundColor: "#9c27b0", borderColor: "#9c27b0" }}
-        />
-      </div>
     </Layout>
   );
 };
