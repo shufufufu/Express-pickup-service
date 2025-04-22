@@ -9,3 +9,8 @@ export {
   fetchPickFail,
 } from "./updateStatusAPI";
 export { fetchRiderInfo, fetchChangeRiderInfo } from "./riderAPI";
+export {
+  fetchGetComment,
+  fetchChangeAllCommentStatus,
+  fetchChangeCommentStatus,
+} from "./commentAPI";

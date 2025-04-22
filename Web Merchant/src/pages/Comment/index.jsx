@@ -26,7 +26,12 @@ import {
   CalendarOutlined,
   CommentOutlined,
 } from "@ant-design/icons";
-import { generateMockFeedbacks } from "./components/mockData";
+import {
+  fetchGetComment,
+  fetchChangeAllCommentStatus,
+  fetchChangeCommentStatus,
+} from "@/apis";
+import { getRiderId } from "@/utils/index";
 
 const { Text, Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -39,44 +44,72 @@ const FeedbackPage = () => {
     pageSize: 10,
     total: 0,
   });
-  const [filters, setFilters] = useState({});
   const [userId, setUserId] = useState("");
   const [status, setStatus] = useState(undefined);
+  const riderId = getRiderId();
 
   // 获取反馈数据
-  const fetchFeedbacks = (params = {}) => {
+  const fetchFeedbacks = async (params = {}) => {
     setLoading(true);
 
-    // 合并筛选条件
-    const queryParams = {
-      page: pagination.current,
-      pageSize: pagination.pageSize,
-      ...filters,
-      ...params,
-    };
+    try {
+      // 合并请求参数
+      const queryParams = {
+        userId: userId || "", // 如果为空传空字符串
+        stauts: status === undefined ? "" : status, // 使用后端期望的参数名stauts(原文如此)
+        page: params.page || pagination.current,
+        pageSize: params.pageSize || pagination.pageSize,
+      };
 
-    // 模拟API请求延迟
-    setTimeout(() => {
-      const result = generateMockFeedbacks(queryParams);
+      const response = await fetchGetComment(queryParams);
 
-      // 对结果进行排序：未读在前，已读在后，每组内按时间降序排列（新的在前）
-      const sortedFeedbacks = [...result.data].sort((a, b) => {
-        // 首先按照阅读状态排序（未读在前）
-        if (a.feedBackStatus !== b.feedBackStatus) {
-          return a.feedBackStatus - b.feedBackStatus;
+      if (response.success) {
+        // 处理后端返回的数据
+        const { data, total } = response;
+
+        if (data && Array.isArray(data)) {
+          // 映射字段名到组件使用的字段名
+          const formattedData = data.map((item) => ({
+            feedBackId: item.id,
+            userId: item.userId,
+            userName: item.userName,
+            comment: item.content, // 后端的content字段映射为前端的comment
+            feedBackTime: item.createTime, // 后端的createTime字段映射为前端的feedBackTime
+            feedBackStatus: item.status, // 后端的status字段映射为前端的feedBackStatus
+            deliverId: item.status === 1 ? riderId : null, // 如果已读，设置处理的骑手ID
+          }));
+
+          // 对结果进行排序：未读在前，已读在后，每组内按时间降序排列（新的在前）
+          const sortedFeedbacks = [...formattedData].sort((a, b) => {
+            // 首先按照阅读状态排序（未读在前）
+            if (a.feedBackStatus !== b.feedBackStatus) {
+              return a.feedBackStatus - b.feedBackStatus;
+            }
+            // 然后按照时间降序排序（新的在前）
+            return new Date(b.feedBackTime) - new Date(a.feedBackTime);
+          });
+
+          setFeedbacks(sortedFeedbacks);
+          setPagination({
+            ...pagination,
+            current: params.page || pagination.current,
+            total: total || 0,
+          });
+        } else {
+          setFeedbacks([]);
+          message.warning("暂无反馈数据");
         }
-        // 然后按照时间降序排序（新的在前）
-        return b.feedBackTime - a.feedBackTime;
-      });
-
-      setFeedbacks(sortedFeedbacks);
-      setPagination({
-        ...pagination,
-        current: result.page,
-        total: result.total,
-      });
+      } else {
+        message.error(response.errorMsg || "获取反馈数据失败");
+        setFeedbacks([]);
+      }
+    } catch (error) {
+      console.error("获取反馈数据出错:", error);
+      message.error("获取反馈数据失败，请稍后重试");
+      setFeedbacks([]);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   // 初始加载
@@ -96,56 +129,53 @@ const FeedbackPage = () => {
 
   // 应用筛选
   const applyFilters = () => {
-    const newFilters = {};
-
-    if (userId) {
-      newFilters.userId = userId;
-    }
-
-    if (status !== undefined) {
-      newFilters.feedBackStatus = status;
-    }
-
-    setFilters(newFilters);
     setPagination({ ...pagination, current: 1 });
-    fetchFeedbacks({ page: 1, ...newFilters });
+    fetchFeedbacks({ page: 1 });
   };
 
   // 重置筛选
   const resetFilters = () => {
     setUserId("");
     setStatus(undefined);
-    setFilters({});
     setPagination({ ...pagination, current: 1 });
     fetchFeedbacks({ page: 1 });
   };
 
   // 标记单个反馈为已读
-  const markAsRead = (id) => {
-    // 模拟API请求
-    setLoading(true);
-    setTimeout(() => {
-      // 更新反馈状态
-      const updatedFeedbacks = feedbacks.map((feedback) =>
-        feedback.id === id
-          ? { ...feedback, feedBackStatus: 1, deliverId: 1 } // 假设当前骑手ID为1
-          : feedback
-      );
+  const markAsRead = async (id) => {
+    // 这里需要实现标记为已读的API，暂时使用前端模拟
+    try {
+      setLoading(true);
 
-      // 重新排序：未读在前，已读在后，每组内按时间降序排列
-      const sortedFeedbacks = [...updatedFeedbacks].sort((a, b) => {
-        // 首先按照阅读状态排序（未读在前）
-        if (a.feedBackStatus !== b.feedBackStatus) {
-          return a.feedBackStatus - b.feedBackStatus;
-        }
-        // 然后按照时间降序排序（新的在前）
-        return b.feedBackTime - a.feedBackTime;
-      });
+      const result = await fetchChangeCommentStatus({ commentId: id });
 
-      setFeedbacks(sortedFeedbacks);
+      if (!result.success) {
+        // 更新反馈状态
+        const updatedFeedbacks = feedbacks.map((feedback) =>
+          feedback.id === id
+            ? { ...feedback, feedBackStatus: 1, deliverId: riderId }
+            : feedback
+        );
+
+        // 重新排序
+        const sortedFeedbacks = [...updatedFeedbacks].sort((a, b) => {
+          if (a.feedBackStatus !== b.feedBackStatus) {
+            return a.feedBackStatus - b.feedBackStatus;
+          }
+          return new Date(b.feedBackTime) - new Date(a.feedBackTime);
+        });
+
+        setFeedbacks(sortedFeedbacks);
+        message.success("已标记为已读");
+      } else {
+        message.error("标记为已读失败，请稍后重试");
+      }
+    } catch (error) {
+      console.error("标记已读失败:", error);
+      message.error("标记已读失败，请稍后重试");
+    } finally {
       setLoading(false);
-      message.success("已标记为已读");
-    }, 300);
+    }
   };
 
   // 标记所有为已读
@@ -153,30 +183,43 @@ const FeedbackPage = () => {
     Modal.confirm({
       title: "确认操作",
       content: "确定要将所有未读反馈标记为已读吗？",
-      onOk: () => {
-        setLoading(true);
-        setTimeout(() => {
-          // 更新所有未读反馈为已读
-          const updatedFeedbacks = feedbacks.map((feedback) => ({
-            ...feedback,
-            feedBackStatus: 1,
-            deliverId: feedback.feedBackStatus === 0 ? 1 : feedback.deliverId, // 只更新未读的
-          }));
+      onOk: async () => {
+        try {
+          setLoading(true);
 
-          // 重新排序：未读在前，已读在后，每组内按时间降序排列
-          const sortedFeedbacks = [...updatedFeedbacks].sort((a, b) => {
-            // 首先按照阅读状态排序（未读在前）
-            if (a.feedBackStatus !== b.feedBackStatus) {
-              return a.feedBackStatus - b.feedBackStatus;
-            }
-            // 然后按照时间降序排序（新的在前）
-            return b.feedBackTime - a.feedBackTime;
+          const result = await fetchChangeAllCommentStatus({
+            page: pagination.current,
+            pageSize: pagination.pageSize,
           });
 
-          setFeedbacks(sortedFeedbacks);
+          if (!result.success) {
+            // 更新所有未读反馈为已读
+            const updatedFeedbacks = feedbacks.map((feedback) => ({
+              ...feedback,
+              feedBackStatus: 1,
+              deliverId:
+                feedback.feedBackStatus === 0 ? riderId : feedback.deliverId,
+            }));
+
+            // 重新排序
+            const sortedFeedbacks = [...updatedFeedbacks].sort((a, b) => {
+              if (a.feedBackStatus !== b.feedBackStatus) {
+                return a.feedBackStatus - b.feedBackStatus;
+              }
+              return new Date(b.feedBackTime) - new Date(a.feedBackTime);
+            });
+
+            setFeedbacks(sortedFeedbacks);
+            message.success("已全部标记为已读");
+          } else {
+            message.error("标记全部已读失败，请稍后重试");
+          }
+        } catch (error) {
+          console.error("标记全部已读失败:", error);
+          message.error("标记全部已读失败，请稍后重试");
+        } finally {
           setLoading(false);
-          message.success("已全部标记为已读");
-        }, 500);
+        }
       },
     });
   };
@@ -184,6 +227,16 @@ const FeedbackPage = () => {
   // 获取未读反馈数量
   const getUnreadCount = () => {
     return feedbacks.filter((feedback) => feedback.feedBackStatus === 0).length;
+  };
+
+  // 格式化时间显示
+  const formatTime = (timeString) => {
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleString("zh-CN");
+    } catch (error) {
+      return timeString;
+    }
   };
 
   return (
@@ -298,7 +351,7 @@ const FeedbackPage = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <CalendarOutlined className="mr-2" />
-                      {new Date(feedback.feedBackTime).toLocaleString()}
+                      {formatTime(feedback.feedBackTime)}
                     </div>
                     <div>
                       <Tag icon={<ClockCircleOutlined />} color="blue">
@@ -367,7 +420,7 @@ const FeedbackPage = () => {
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <CalendarOutlined className="mr-2" />
-                      {new Date(feedback.feedBackTime).toLocaleString()}
+                      {formatTime(feedback.feedBackTime)}
                     </div>
                     <div>
                       <Tag icon={<CheckCircleOutlined />} color="green">
