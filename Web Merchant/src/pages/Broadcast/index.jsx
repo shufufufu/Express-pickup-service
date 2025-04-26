@@ -15,6 +15,7 @@ import {
   Popconfirm,
   Space,
   Badge,
+  Modal,
 } from "antd";
 import {
   NotificationOutlined,
@@ -24,8 +25,10 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  SaveOutlined,
 } from "@ant-design/icons";
 import { generateMockAnnouncements } from "./components/mockData";
+import dayjs from "dayjs"; // 导入dayjs用于日期处理
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -38,7 +41,13 @@ const AnnouncementPage = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
+
+  // 编辑相关状态
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   // 获取公告数据
   useEffect(() => {
@@ -93,6 +102,78 @@ const AnnouncementPage = () => {
       messageApi.success("公告已删除");
       setLoading(false);
     }, 500);
+  };
+
+  // 打开编辑弹窗
+  const handleEditClick = (announcement) => {
+    setEditingAnnouncement(announcement);
+
+    // 重置表单，避免之前的值影响
+    editForm.resetFields();
+
+    // 设置表单初始值，包括日期
+    editForm.setFieldsValue({
+      title: announcement.title,
+      content: announcement.content,
+      // 将字符串日期转换为dayjs对象
+      displayPeriod: [
+        dayjs(announcement.startDate),
+        dayjs(announcement.endDate),
+      ],
+    });
+
+    setEditModalVisible(true);
+  };
+
+  // 处理编辑保存
+  const handleEditSave = async () => {
+    try {
+      const values = await editForm.validateFields();
+      setEditSubmitting(true);
+
+      // 格式化日期范围
+      const formattedValues = {
+        ...values,
+        displayPeriod: values.displayPeriod
+          ? [
+              values.displayPeriod[0].format("YYYY-MM-DD"),
+              values.displayPeriod[1].format("YYYY-MM-DD"),
+            ]
+          : [editingAnnouncement.startDate, editingAnnouncement.endDate],
+      };
+
+      // 模拟API请求
+      setTimeout(() => {
+        // 更新本地数据
+        const updatedAnnouncements = announcements.map((item) => {
+          if (item.id === editingAnnouncement.id) {
+            return {
+              ...item,
+              title: values.title,
+              content: values.content,
+              startDate: formattedValues.displayPeriod[0],
+              endDate: formattedValues.displayPeriod[1],
+            };
+          }
+          return item;
+        });
+
+        setAnnouncements(updatedAnnouncements);
+        messageApi.success("公告已更新");
+        setEditModalVisible(false);
+        setEditingAnnouncement(null);
+        setEditSubmitting(false);
+      }, 800);
+    } catch (error) {
+      console.error("表单验证失败:", error);
+    }
+  };
+
+  // 关闭编辑弹窗
+  const handleEditCancel = () => {
+    setEditModalVisible(false);
+    setEditingAnnouncement(null);
+    editForm.resetFields();
   };
 
   // 判断公告是否过期
@@ -218,7 +299,12 @@ const AnnouncementPage = () => {
                       <Button type="text" icon={<EyeOutlined />} size="small">
                         查看详情
                       </Button>
-                      <Button type="text" icon={<EditOutlined />} size="small">
+                      <Button
+                        type="text"
+                        icon={<EditOutlined />}
+                        size="small"
+                        onClick={() => handleEditClick(item)}
+                      >
                         编辑
                       </Button>
                       <Popconfirm
@@ -292,6 +378,75 @@ const AnnouncementPage = () => {
           )}
         </div>
       )}
+
+      {/* 编辑公告弹窗 */}
+      <Modal
+        title={
+          <div className="flex items-center">
+            <EditOutlined className="text-blue-500 mr-2" />
+            <span>编辑公告</span>
+          </div>
+        }
+        open={editModalVisible}
+        onCancel={handleEditCancel}
+        footer={[
+          <Button key="cancel" onClick={handleEditCancel}>
+            取消
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={editSubmitting}
+            onClick={handleEditSave}
+          >
+            保存修改
+          </Button>,
+        ]}
+        maskClosable={false}
+        width={600}
+      >
+        {editingAnnouncement && (
+          <Form
+            form={editForm}
+            layout="vertical"
+            requiredMark={false}
+            className="mt-4"
+          >
+            <Form.Item
+              name="title"
+              label="公告标题"
+              rules={[{ required: true, message: "请输入公告标题" }]}
+            >
+              <Input placeholder="请输入公告标题" maxLength={20} showCount />
+            </Form.Item>
+
+            <Form.Item
+              name="content"
+              label="公告内容"
+              rules={[{ required: true, message: "请输入公告内容" }]}
+            >
+              <TextArea
+                placeholder="请输入公告内容..."
+                rows={6}
+                maxLength={150}
+                showCount
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="displayPeriod"
+              label="展示时间段"
+              rules={[{ required: true, message: "请选择展示时间段" }]}
+            >
+              <RangePicker
+                style={{ width: "100%" }}
+                placeholder={["开始日期", "结束日期"]}
+              />
+            </Form.Item>
+          </Form>
+        )}
+      </Modal>
     </Card>
   );
 };
