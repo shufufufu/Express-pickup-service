@@ -14,3 +14,4 @@ export {
   fetchChangeAllCommentStatus,
   fetchChangeCommentStatus,
 } from "./commentAPI";
+export { fetchAnalysisData } from "./analysisAPI";

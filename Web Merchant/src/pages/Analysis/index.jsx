@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Card, Tabs, Spin } from "antd";
+import { Card, Tabs, Spin, message } from "antd";
 import { init, getInstanceByDom, use } from "echarts/core";
 import {
   DatasetComponent,
@@ -12,6 +12,7 @@ import { LineChart, PieChart } from "echarts/charts";
 import { UniversalTransition, LabelLayout } from "echarts/features";
 import { CanvasRenderer } from "echarts/renderers";
 import { generateMockData } from "./components/mockData";
+import { fetchAnalysisData } from "@/apis";
 
 // 注册必要的组件
 use([
@@ -32,7 +33,7 @@ const { TabPane } = Tabs;
 const OrderAnalysis = () => {
   const [activeTab, setActiveTab] = useState("week");
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
+  const [chartData, setChartData] = useState(null);
   const [screenWidth, setScreenWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
@@ -40,6 +41,7 @@ const OrderAnalysis = () => {
   const lineChartRef = useRef(null);
   const statusPieRef = useRef(null);
   const timePieRef = useRef(null);
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 监听屏幕宽度变化
   useEffect(() => {
@@ -57,17 +59,52 @@ const OrderAnalysis = () => {
   useEffect(() => {
     setLoading(true);
 
-    // 模拟API请求延迟
-    setTimeout(() => {
-      const mockData = generateMockData(activeTab);
-      setData(mockData);
-      setLoading(false);
-    }, 500);
-  }, [activeTab]);
+    // 调用真实API
+    fetchAnalysisData(activeTab)
+      .then((response) => {
+        if (response.success && response.data) {
+          // 处理API返回的数据
+          processApiData(response.data);
+        } else {
+          messageApi.error(response.errorMsg || "获取数据失败");
+          // 如果API调用失败，使用模拟数据
+          const mockResponse = generateMockData(activeTab);
+          processApiData(mockResponse.data);
+        }
+      })
+      .catch((error) => {
+        console.error("获取数据失败:", error);
+        messageApi.error("获取数据失败，使用模拟数据");
+        // 如果API调用出错，使用模拟数据
+        const mockResponse = generateMockData(activeTab);
+        processApiData(mockResponse.data);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [activeTab, messageApi]);
+
+  // 处理API返回的数据，转换为图表所需格式
+  const processApiData = (apiData) => {
+    // 提取日期、订单数据
+    const dates = apiData.map((item) => item.date);
+    const totalOrders = apiData.map((item) => item.all);
+    const completedOrders = apiData.map((item) => item.worked);
+    const failedOrders = apiData.map((item) => item.unWorked);
+    const timeDistribution = apiData.map((item) => item.array);
+
+    setChartData({
+      dates,
+      totalOrders,
+      completedOrders,
+      failedOrders,
+      timeDistribution,
+    });
+  };
 
   // 初始化图表
   useEffect(() => {
-    if (!data || loading) return;
+    if (!chartData || loading) return;
 
     // 初始化图表实例
     let lineChart = getInstanceByDom(lineChartRef.current);
@@ -86,7 +123,7 @@ const OrderAnalysis = () => {
     }
 
     // 检查是否有订单数据，所有图表都使用这个变量
-    const hasOrders = data.totalOrders.some((value) => value > 0);
+    const hasOrders = chartData.totalOrders.some((value) => value > 0);
 
     // 判断是否为小屏幕
     const isSmallScreen = screenWidth < 768;
@@ -105,7 +142,7 @@ const OrderAnalysis = () => {
         },
       },
       legend: {
-        data: ["总订单量", "已完成订单", "未成功订单"],
+        data: ["总订单量", "已完成订单", "未完成订单"],
         bottom: 10,
         // 不使用scroll模式，让图例自然换行
         type: "plain",
@@ -123,7 +160,7 @@ const OrderAnalysis = () => {
       xAxis: {
         type: "category",
         boundaryGap: false,
-        data: data.dates,
+        data: chartData.dates,
       },
       yAxis: {
         type: "value",
@@ -133,7 +170,7 @@ const OrderAnalysis = () => {
           name: "总订单量",
           type: "line",
           smooth: true,
-          data: data.totalOrders,
+          data: chartData.totalOrders,
           itemStyle: {
             color: "#5470c6",
           },
@@ -142,16 +179,16 @@ const OrderAnalysis = () => {
           name: "已完成订单",
           type: "line",
           smooth: true,
-          data: data.completedOrders,
+          data: chartData.completedOrders,
           itemStyle: {
             color: "#91cc75",
           },
         },
         {
-          name: "未成功订单",
+          name: "未完成订单",
           type: "line",
           smooth: true,
-          data: data.failedOrders,
+          data: chartData.failedOrders,
           itemStyle: {
             color: "#ee6666",
           },
@@ -180,7 +217,7 @@ const OrderAnalysis = () => {
         type: "plain",
         // 减小图例项之间的间距
         itemGap: 10,
-        data: ["已完成订单", "未成功订单"],
+        data: ["已完成订单", "未完成订单"],
       },
       series: [
         {
@@ -214,13 +251,13 @@ const OrderAnalysis = () => {
           data: hasOrders
             ? [
                 {
-                  value: data.completedOrders[0],
+                  value: chartData.completedOrders[0],
                   name: "已完成订单",
                   itemStyle: { color: "#91cc75" },
                 },
                 {
-                  value: data.failedOrders[0],
-                  name: "未成功订单",
+                  value: chartData.failedOrders[0],
+                  name: "未完成订单",
                   itemStyle: { color: "#ee6666" },
                 },
               ]
@@ -295,7 +332,7 @@ const OrderAnalysis = () => {
             show: false,
           },
           data: hasOrders
-            ? data.timeDistribution[0].map((value, index) => {
+            ? chartData.timeDistribution[0].map((value, index) => {
                 const timeLabels = [
                   "凌晨 (0-4点)",
                   "早晨 (4-8点)",
@@ -336,7 +373,7 @@ const OrderAnalysis = () => {
         const dimension = xAxisInfo.value;
 
         // 检查当前时间点是否有订单
-        const hasDimensionOrders = data.totalOrders[dimension] > 0;
+        const hasDimensionOrders = chartData.totalOrders[dimension] > 0;
 
         // 更新状态饼图
         statusPieChart.setOption({
@@ -345,13 +382,13 @@ const OrderAnalysis = () => {
               data: hasDimensionOrders
                 ? [
                     {
-                      value: data.completedOrders[dimension],
+                      value: chartData.completedOrders[dimension],
                       name: "已完成订单",
                       itemStyle: { color: "#91cc75" },
                     },
                     {
-                      value: data.failedOrders[dimension],
-                      name: "未成功订单",
+                      value: chartData.failedOrders[dimension],
+                      name: "未完成订单",
                       itemStyle: { color: "#ee6666" },
                     },
                   ]
@@ -359,7 +396,7 @@ const OrderAnalysis = () => {
             },
           ],
           title: {
-            text: `订单状态分布 (${data.dates[dimension]})`,
+            text: `订单状态分布 (${chartData.dates[dimension]})`,
             subtext: hasDimensionOrders ? "" : "暂无订单数据",
           },
         });
@@ -369,7 +406,7 @@ const OrderAnalysis = () => {
           series: [
             {
               data: hasDimensionOrders
-                ? data.timeDistribution[dimension].map((value, index) => ({
+                ? chartData.timeDistribution[dimension].map((value, index) => ({
                     value,
                     name: [
                       "凌晨 (0-4点)",
@@ -394,7 +431,7 @@ const OrderAnalysis = () => {
             },
           ],
           title: {
-            text: `订单时间分布 (${data.dates[dimension]})`,
+            text: `订单时间分布 (${chartData.dates[dimension]})`,
             subtext: hasDimensionOrders ? "" : "暂无订单数据",
           },
         });
@@ -416,7 +453,7 @@ const OrderAnalysis = () => {
       statusPieChart.dispose();
       timePieChart.dispose();
     };
-  }, [data, loading, screenWidth]);
+  }, [chartData, loading, screenWidth]);
 
   // 处理标签页切换
   const handleTabChange = (key) => {
@@ -425,6 +462,7 @@ const OrderAnalysis = () => {
 
   return (
     <Card title="订单流水分析" className="shadow-md">
+      {contextHolder}
       <Tabs activeKey={activeTab} onChange={handleTabChange}>
         <TabPane tab="近一周（天）" key="week" />
         <TabPane tab="近一月（天）" key="month" />
