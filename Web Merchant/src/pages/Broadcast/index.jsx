@@ -27,8 +27,13 @@ import {
   EyeOutlined,
   SaveOutlined,
 } from "@ant-design/icons";
-import { generateMockAnnouncements } from "./components/mockData";
 import dayjs from "dayjs"; // 导入dayjs用于日期处理
+import {
+  fetchReleaseBroadcast,
+  fetchHistoryBroadcast,
+  fetchDeleteBroadcast,
+  fetchEditBroadcast,
+} from "@/apis";
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -49,59 +54,124 @@ const AnnouncementPage = () => {
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
 
+  // 分页相关状态
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 5,
+    total: 0,
+  });
+
   // 获取公告数据
   useEffect(() => {
     if (activeTab === "history") {
-      fetchAnnouncements();
+      fetchAnnouncements(pagination.current, pagination.pageSize);
     }
   }, [activeTab]);
 
-  const fetchAnnouncements = () => {
+  // 获取历史公告
+  const fetchAnnouncements = (page = 1, pageSize = 5) => {
     setLoading(true);
-    // 模拟API请求
-    setTimeout(() => {
-      const data = generateMockAnnouncements();
-      setAnnouncements(data);
-      setLoading(false);
-    }, 800);
+
+    fetchHistoryBroadcast({ page, pageSize })
+      .then((response) => {
+        if (response.success && response.data) {
+          // 处理返回的数据
+          const formattedData = response.data.data.map((item) => ({
+            id: item.id,
+            deliverId: item.deliverId,
+            title: item.title,
+            content: item.content,
+            // 将时间戳转换为日期格式
+            startDate: dayjs(item.startTime).format("YYYY-MM-DD"),
+            endDate: dayjs(item.endTime).format("YYYY-MM-DD"),
+            status: item.status, // 0未展示，1当前展示中，2已过期
+          }));
+
+          setAnnouncements(formattedData);
+          setPagination({
+            ...pagination,
+            current: page,
+            total: response.data.total || 0,
+          });
+        } else {
+          messageApi.error(response.errorMsg || "获取公告列表失败");
+        }
+      })
+      .catch((error) => {
+        console.error("获取公告列表失败:", error);
+        messageApi.error("获取公告列表失败，请稍后重试");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
+  // 处理分页变化
+  const handlePageChange = (page, pageSize) => {
+    fetchAnnouncements(page, pageSize);
   };
 
   // 处理发布公告
   const handlePublish = (values) => {
     setSubmitting(true);
 
-    // 格式化日期范围
-    const formattedValues = {
-      ...values,
-      displayPeriod: [
-        values.displayPeriod[0].format("YYYY-MM-DD"),
-        values.displayPeriod[1].format("YYYY-MM-DD"),
-      ],
+    // 将日期转换为时间戳格式
+    const startTime = values.displayPeriod[0].valueOf(); // 转换为时间戳
+    const endTime = values.displayPeriod[1].valueOf(); // 转换为时间戳
+
+    // 准备API请求参数
+    const params = {
+      title: values.title,
+      content: values.content,
+      startTime: startTime,
+      endTime: endTime,
     };
 
-    // 模拟API请求
-    setTimeout(() => {
-      console.log("发布公告:", formattedValues);
-      messageApi.success("公告发布成功！");
-      form.resetFields();
-      setSubmitting(false);
+    // 调用API发布公告
+    fetchReleaseBroadcast(params)
+      .then((response) => {
+        if (response.success) {
+          messageApi.success("公告发布成功！");
+          form.resetFields();
 
-      // 如果用户在历史标签页发布，刷新列表
-      if (activeTab === "history") {
-        fetchAnnouncements();
-      }
-    }, 1000);
+          // 如果用户在历史标签页发布，刷新列表
+          if (activeTab === "history") {
+            fetchAnnouncements(pagination.current, pagination.pageSize);
+          }
+        } else {
+          messageApi.error(response.errorMsg || "发布失败，请稍后重试");
+        }
+      })
+      .catch((error) => {
+        console.error("发布公告失败:", error);
+        messageApi.error("发布失败，请稍后重试");
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
   };
 
   // 处理删除公告
   const handleDelete = (id) => {
     setLoading(true);
-    // 模拟API请求
-    setTimeout(() => {
-      setAnnouncements((prev) => prev.filter((item) => item.id !== id));
-      messageApi.success("公告已删除");
-      setLoading(false);
-    }, 500);
+
+    fetchDeleteBroadcast({ id })
+      .then((response) => {
+        if (response.success) {
+          messageApi.success("公告已删除");
+          // 重新获取公告列表
+          fetchAnnouncements(pagination.current, pagination.pageSize);
+        } else {
+          messageApi.error(response.errorMsg || "删除失败，请稍后重试");
+        }
+      })
+      .catch((error) => {
+        console.error("删除公告失败:", error);
+        messageApi.error("删除失败，请稍后重试");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   // 打开编辑弹窗
@@ -131,39 +201,40 @@ const AnnouncementPage = () => {
       const values = await editForm.validateFields();
       setEditSubmitting(true);
 
-      // 格式化日期范围
-      const formattedValues = {
-        ...values,
-        displayPeriod: values.displayPeriod
-          ? [
-              values.displayPeriod[0].format("YYYY-MM-DD"),
-              values.displayPeriod[1].format("YYYY-MM-DD"),
-            ]
-          : [editingAnnouncement.startDate, editingAnnouncement.endDate],
+      // 将日期转换为时间戳格式
+      const startTime = values.displayPeriod[0].valueOf(); // 转换为时间戳
+      const endTime = values.displayPeriod[1].valueOf(); // 转换为时间戳
+
+      // 准备API请求参数
+      const params = {
+        id: editingAnnouncement.id,
+        title: values.title,
+        content: values.content,
+        startTime: startTime,
+        endTime: endTime,
       };
 
-      // 模拟API请求
-      setTimeout(() => {
-        // 更新本地数据
-        const updatedAnnouncements = announcements.map((item) => {
-          if (item.id === editingAnnouncement.id) {
-            return {
-              ...item,
-              title: values.title,
-              content: values.content,
-              startDate: formattedValues.displayPeriod[0],
-              endDate: formattedValues.displayPeriod[1],
-            };
-          }
-          return item;
-        });
+      // 调用API编辑公告
+      fetchEditBroadcast(params)
+        .then((response) => {
+          if (response.success) {
+            messageApi.success("公告已更新");
+            setEditModalVisible(false);
+            setEditingAnnouncement(null);
 
-        setAnnouncements(updatedAnnouncements);
-        messageApi.success("公告已更新");
-        setEditModalVisible(false);
-        setEditingAnnouncement(null);
-        setEditSubmitting(false);
-      }, 800);
+            // 重新获取公告列表
+            fetchAnnouncements(pagination.current, pagination.pageSize);
+          } else {
+            messageApi.error(response.errorMsg || "更新失败，请稍后重试");
+          }
+        })
+        .catch((error) => {
+          console.error("更新公告失败:", error);
+          messageApi.error("更新失败，请稍后重试");
+        })
+        .finally(() => {
+          setEditSubmitting(false);
+        });
     } catch (error) {
       console.error("表单验证失败:", error);
     }
@@ -176,15 +247,18 @@ const AnnouncementPage = () => {
     editForm.resetFields();
   };
 
-  // 判断公告是否过期
-  const isExpired = (endDate) => {
-    return new Date(endDate) < new Date();
-  };
-
-  // 判断公告是否当前展示
-  const isActive = (startDate, endDate) => {
-    const now = new Date();
-    return new Date(startDate) <= now && new Date(endDate) >= now;
+  // 根据状态判断公告状态
+  const getAnnouncementStatus = (status) => {
+    switch (status) {
+      case 0:
+        return { color: "blue", text: "待展示" };
+      case 1:
+        return { color: "success", text: "当前展示中" };
+      case 2:
+        return { color: "default", text: "已过期" };
+      default:
+        return { color: "default", text: "未知状态" };
+    }
   };
 
   return (
@@ -287,93 +361,99 @@ const AnnouncementPage = () => {
               itemLayout="vertical"
               dataSource={announcements}
               pagination={{
-                pageSize: 5,
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                onChange: handlePageChange,
                 showSizeChanger: false,
                 showTotal: (total) => `共 ${total} 条公告`,
               }}
-              renderItem={(item) => (
-                <List.Item
-                  key={item.id}
-                  actions={[
-                    <Space key="actions">
-                      <Button type="text" icon={<EyeOutlined />} size="small">
-                        查看详情
-                      </Button>
-                      <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        size="small"
-                        onClick={() => handleEditClick(item)}
-                      >
-                        编辑
-                      </Button>
-                      <Popconfirm
-                        title="确定要删除此公告吗？"
-                        onConfirm={() => handleDelete(item.id)}
-                        okText="确定"
-                        cancelText="取消"
-                      >
+              renderItem={(item) => {
+                const statusInfo = getAnnouncementStatus(item.status);
+
+                return (
+                  <List.Item
+                    key={item.id}
+                    actions={[
+                      <Space key="actions">
+                        <Button type="text" icon={<EyeOutlined />} size="small">
+                          查看详情
+                        </Button>
                         <Button
                           type="text"
-                          icon={<DeleteOutlined />}
-                          danger
+                          icon={<EditOutlined />}
                           size="small"
+                          onClick={() => handleEditClick(item)}
+                          disabled={item.status === 2} // 已过期的公告不能编辑
                         >
-                          删除
+                          编辑
                         </Button>
-                      </Popconfirm>
-                    </Space>,
-                  ]}
-                  className={`p-4 rounded-lg mb-4 transition-all duration-300 hover:shadow-md ${
-                    isActive(item.startDate, item.endDate)
-                      ? "border-l-4 border-green-500 bg-green-50"
-                      : isExpired(item.endDate)
-                      ? "border-l-4 border-gray-300 bg-gray-50"
-                      : "border-l-4 border-blue-500 bg-blue-50"
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center">
-                      <NotificationOutlined className="text-blue-500 mr-2" />
-                      <Title level={5} className="m-0">
-                        {item.title}
-                      </Title>
-                    </div>
-                    <div>
-                      {isActive(item.startDate, item.endDate) ? (
-                        <Badge
-                          status="success"
-                          text={<Tag color="success">当前展示中</Tag>}
-                        />
-                      ) : isExpired(item.endDate) ? (
-                        <Badge
-                          status="default"
-                          text={<Tag color="default">已过期</Tag>}
-                        />
-                      ) : (
-                        <Badge
-                          status="processing"
-                          text={<Tag color="processing">待展示</Tag>}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <Paragraph
-                    ellipsis={{ rows: 2, expandable: true, symbol: "展开" }}
-                    className="mt-3 text-gray-700"
+                        <Popconfirm
+                          title="确定要删除此公告吗？"
+                          onConfirm={() => handleDelete(item.id)}
+                          okText="确定"
+                          cancelText="取消"
+                        >
+                          <Button
+                            type="text"
+                            icon={<DeleteOutlined />}
+                            danger
+                            size="small"
+                          >
+                            删除
+                          </Button>
+                        </Popconfirm>
+                      </Space>,
+                    ]}
+                    className={`p-4 rounded-lg mb-4 transition-all duration-300 hover:shadow-md ${
+                      item.status === 1
+                        ? "border-l-4 border-green-500 bg-green-50"
+                        : item.status === 2
+                        ? "border-l-4 border-gray-300 bg-gray-50"
+                        : "border-l-4 border-blue-500 bg-blue-50"
+                    }`}
                   >
-                    {item.content}
-                  </Paragraph>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center">
+                        <NotificationOutlined className="text-blue-500 mr-2" />
+                        <Title level={5} className="m-0">
+                          {item.title}
+                        </Title>
+                      </div>
+                      <div>
+                        <Badge
+                          status={
+                            statusInfo.color === "success"
+                              ? "success"
+                              : statusInfo.color === "blue"
+                              ? "processing"
+                              : "default"
+                          }
+                          text={
+                            <Tag color={statusInfo.color}>
+                              {statusInfo.text}
+                            </Tag>
+                          }
+                        />
+                      </div>
+                    </div>
 
-                  <div className="flex items-center text-gray-500 text-sm mt-2">
-                    <CalendarOutlined className="mr-1" />
-                    <span>
-                      展示时间: {item.startDate} 至 {item.endDate}
-                    </span>
-                  </div>
-                </List.Item>
-              )}
+                    <Paragraph
+                      ellipsis={{ rows: 2, expandable: true, symbol: "展开" }}
+                      className="mt-3 text-gray-700"
+                    >
+                      {item.content}
+                    </Paragraph>
+
+                    <div className="flex items-center text-gray-500 text-sm mt-2">
+                      <CalendarOutlined className="mr-1" />
+                      <span>
+                        展示时间: {item.startDate} 至 {item.endDate}
+                      </span>
+                    </div>
+                  </List.Item>
+                );
+              }}
             />
           )}
         </div>

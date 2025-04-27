@@ -26,7 +26,7 @@ export const fetchAnalysisData = async (timeRange) => {
     const response = await http({
       method: "GET",
       url: `${baseUrl}/shop/slectFlowingWater`,
-      params: { id }, // 使用params而不是data，因为是GET请求
+      params: { id },
       auth: true, // 需要认证
     });
 

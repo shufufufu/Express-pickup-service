@@ -15,3 +15,9 @@ export {
   fetchChangeCommentStatus,
 } from "./commentAPI";
 export { fetchAnalysisData } from "./analysisAPI";
+export {
+  fetchReleaseBroadcast,
+  fetchHistoryBroadcast,
+  fetchDeleteBroadcast,
+  fetchEditBroadcast,
+} from "./broadcastAPI";
