@@ -51,9 +51,9 @@ const OrderManagement = () => {
         ...extraParams,
       });
       setLoading(false);
-      if (result.success) {
-        setOrders(result.data.orders);
-        setTotal(result.data.totalPage);
+      if (result.success && result.data) {
+        setOrders(result.data.order || []);
+        setTotal(result.data.total || 0);
       } else {
         message.error(`订单获取失败: ${result.errorMsg}`);
       }
@@ -383,6 +383,13 @@ const OrderManagement = () => {
       dataIndex: "createTime",
       key: "createTime",
       width: 130,
+      render: (createTime) => {
+        const date = new Date(createTime);
+        return `${date.getMonth() + 1}/${date.getDate()} ${date
+          .getHours()
+          .toString()
+          .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+      },
     },
     {
       title: "剩余时间",
@@ -544,7 +551,20 @@ const OrderManagement = () => {
                     </p>
                     <p className="flex justify-between">
                       <span className="text-gray-600">下单时间：</span>
-                      <span>{currentOrder.createTime}</span>
+                      <span>
+                        {(() => {
+                          const date = new Date(currentOrder.createTime);
+                          return `${
+                            date.getMonth() + 1
+                          }/${date.getDate()} ${date
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0")}:${date
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0")}`;
+                        })()}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -569,7 +589,18 @@ const OrderManagement = () => {
                     <p className="flex justify-between">
                       <span className="text-gray-600">截止时间：</span>
                       <span>
-                        {new Date(currentOrder.downTime).toLocaleString()}
+                        {(() => {
+                          const date = new Date(currentOrder.downTime);
+                          return `${
+                            date.getMonth() + 1
+                          }/${date.getDate()} ${date
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0")}:${date
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0")}`;
+                        })()}
                       </span>
                     </p>
                   </div>

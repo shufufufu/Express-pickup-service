@@ -86,8 +86,17 @@ const OrderAnalysis = () => {
 
   // 处理API返回的数据，转换为图表所需格式
   const processApiData = (apiData) => {
-    // 提取日期、订单数据
-    const dates = apiData.map((item) => item.date);
+    // 根据当前选中的时间范围生成日期数组
+    const generateDates = () => {
+      const today = new Date();
+      return apiData.map((_, index) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() - (apiData.length - 1 - index));
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      });
+    };
+
+    const dates = generateDates();
     const totalOrders = apiData.map((item) => item.all);
     const completedOrders = apiData.map((item) => item.worked);
     const failedOrders = apiData.map((item) => item.unWorked);

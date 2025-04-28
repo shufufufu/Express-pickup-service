@@ -48,7 +48,7 @@ export async function http(config) {
 
     // 添加认证头（如果需要）
     if (auth) {
-      const token = localStorage.getItem("authToken");
+      const token = getToken();
       if (token) {
         fetchConfig.headers["Authorization"] = `Bearer ${token}`;
       }

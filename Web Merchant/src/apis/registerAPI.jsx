@@ -55,9 +55,7 @@ export const fetchDToken = async () => {
     const response = await http({
       method: "GET",
       url: `${baseUrl}/shop/create`,
-      data: {
-        id: riderId,
-      },
+      params: { riderId },
       auth: true, // 需要认证
     });
 

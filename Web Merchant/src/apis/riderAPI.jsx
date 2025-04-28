@@ -7,14 +7,11 @@ export const fetchRiderInfo = async () => {
   const riderId = getRiderId(); // 获取骑手ID
   try {
     const response = await http({
-      method: "POST",
-      url: `${baseUrl}/shop/selectDeliverInfo`,
-      data: {
-        deliverId: riderId,
-      },
+      method: "GET",
+      url: `${baseUrl}/shop/selectDeliverInfo/${riderId}`,
+
       auth: true, // 需要认证
     });
-
     return response.data;
   } catch (error) {
     // 处理错误
@@ -36,7 +33,7 @@ export const fetchChangeRiderInfo = async (params) => {
       method: "POST",
       url: `${baseUrl}/shop/changeDeliverInfo`,
       data: {
-        deliverId: riderId,
+        id: riderId,
         ...params,
       },
       auth: true, // 需要认证

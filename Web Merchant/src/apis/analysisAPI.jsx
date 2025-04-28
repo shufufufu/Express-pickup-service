@@ -25,11 +25,10 @@ export const fetchAnalysisData = async (timeRange) => {
   try {
     const response = await http({
       method: "GET",
-      url: `${baseUrl}/shop/slectFlowingWater`,
-      params: { id },
+      url: `${baseUrl}/shop/slectFlowingWater/${id}`,
       auth: true, // 需要认证
     });
-
+    console.log("获取流水信息成功:", response.data);
     return response.data;
   } catch (error) {
     // 处理错误

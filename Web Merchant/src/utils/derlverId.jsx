@@ -1,4 +1,4 @@
-const riderIdKEY = "riderId_key";
+const riderIdKEY = "riderId";
 
 export function setRiderId(riderId) {
   return localStorage.setItem(riderIdKEY, riderId);
