@@ -76,7 +76,7 @@ const AnnouncementPage = () => {
       .then((response) => {
         if (response.success && response.data) {
           // 处理返回的数据
-          const formattedData = response.data.data.map((item) => ({
+          const formattedData = response.data.order.map((item) => ({
             id: item.id,
             deliverId: item.deliverId,
             title: item.title,
@@ -91,7 +91,7 @@ const AnnouncementPage = () => {
           setPagination({
             ...pagination,
             current: page,
-            total: response.data.total || 0,
+            total: response.data.total,
           });
         } else {
           messageApi.error(response.errorMsg || "获取公告列表失败");

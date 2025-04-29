@@ -36,22 +36,9 @@ export const fetchHistoryOrder = async (params = {}) => {
       auth: true, // 需要认证
     });
 
-    // 确保返回格式正确
-    if (response.data && response.data.success) {
-      return {
-        success: true,
-        data: {
-          list: response.data.data?.list || [],
-          total: response.data.data?.total || 0, // 确保total存在
-        },
-      };
-    } else {
-      return {
-        success: false,
-        errorMsg: response.data?.errorMsg || "获取数据失败",
-        data: null,
-      };
-    }
+    // 直接返回后端的响应结构，不做转换
+    console.log("获取历史订单成功:", response.data);
+    return response.data;
   } catch (error) {
     // 处理错误
     console.error("获取历史订单失败:", error);
@@ -98,22 +85,8 @@ export const fetchPHistoryOrder = async (params = {}) => {
       auth: true, // 需要认证
     });
 
-    // 确保返回格式正确
-    if (response.data && response.data.success) {
-      return {
-        success: true,
-        data: {
-          list: response.data.data?.list || [],
-          total: response.data.data?.total || 0, // 确保total存在
-        },
-      };
-    } else {
-      return {
-        success: false,
-        errorMsg: response.data?.errorMsg || "获取数据失败",
-        data: null,
-      };
-    }
+    // 直接返回后端的响应结构，不做转换
+    return response.data;
   } catch (error) {
     // 处理错误
     console.error("获取个人历史订单失败:", error);

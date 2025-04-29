@@ -94,7 +94,8 @@ const HistoryOrders = () => {
       }
 
       if (result.success) {
-        setOrders(result.data.list || []);
+        // 修复这里：使用 result.data.order 而不是 result.data.list
+        setOrders(result.data.order || []);
         setPagination({
           ...pagination,
           current: queryParams.page,

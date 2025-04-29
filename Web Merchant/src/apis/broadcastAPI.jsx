@@ -6,6 +6,7 @@ const riderId = getRiderId(); // 获取骑手ID
 //发布公告接口
 export const fetchReleaseBroadcast = async (params) => {
   const { title, content, startTime, endTime } = params;
+  console.log("获取评论请求参数:", { title, content, startTime, endTime });
   try {
     const response = await http({
       method: "POST",
@@ -40,15 +41,10 @@ export const fetchHistoryBroadcast = async (params) => {
   try {
     const response = await http({
       method: "GET",
-      url: `${baseUrl}/shop/select/broadcast`,
-      params: {
-        deliverId: riderId,
-        page: page,
-        pageSize: pageSize,
-      },
+      url: `${baseUrl}/shop/select/broadcast/${page}/${pageSize}`,
       auth: true, // 需要认证
     });
-
+    console.log("获取历史公告成功:", response.data);
     return response.data;
   } catch (error) {
     // 处理错误
@@ -69,11 +65,7 @@ export const fetchDeleteBroadcast = async (params) => {
   try {
     const response = await http({
       method: "DELETE",
-      url: `${baseUrl}/shop/delete/broadcast`,
-      params: {
-        deliverId: riderId,
-        id: id,
-      },
+      url: `${baseUrl}/shop/delete/broadcast/${id}/${riderId}`,
       auth: true, // 需要认证
     });
 

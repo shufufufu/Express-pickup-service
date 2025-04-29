@@ -16,13 +16,13 @@ export const fetchHistoryOrderInfo = async ({
 
     // 参数验证
     if (!Number.isInteger(parsedPage) || parsedPage < 1)
-      throw new Error("页码必须是大于0的整数");
+      throw new Error("请输入有效的页码");
     if (!Number.isInteger(parsedPageSize) || parsedPageSize < 1)
-      throw new Error("每页数量必须是大于0的整数");
+      throw new Error("请输入有效的每页数量");
     if (beginTime && !Number.isInteger(Number(beginTime)))
-      throw new Error("开始时间必须是时间戳格式");
+      throw new Error("请选择有效的开始时间");
     if (endTime && !Number.isInteger(Number(endTime)))
-      throw new Error("结束时间必须是时间戳格式");
+      throw new Error("请选择有效的结束时间");
 
     const userId = getUserId();
     console.log("请求参数:", {
@@ -50,16 +50,25 @@ export const fetchHistoryOrderInfo = async ({
     console.log("API响应:", { success, errorMsg, data });
 
     if (!success) {
-      throw new Error(errorMsg || "请求失败");
+      throw new Error(errorMsg || "获取反馈数据失败，请稍后重试");
     }
 
-    if (Array.isArray(data)) {
-      return { list: data };
+    if (data && typeof data === "object") {
+      const orderList = data.order || [];
+      return {
+        list: orderList,
+        total: data.total || 0,
+        message: orderList.length === 0 ? "暂无反馈数据" : "",
+      };
     } else {
-      throw new Error("后端返回的数据格式不正确");
+      return {
+        list: [],
+        total: 0,
+        message: "暂无反馈数据",
+      };
     }
   } catch (error) {
-    console.error("Failed to fetch historyorder:", error);
-    throw error;
+    console.error("获取历史订单失败:", error);
+    throw new Error(error.message || "获取反馈数据失败，请稍后重试");
   }
 };

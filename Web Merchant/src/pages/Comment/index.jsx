@@ -56,7 +56,7 @@ const FeedbackPage = () => {
       // 合并请求参数
       const queryParams = {
         userId: userId || "", // 如果为空传空字符串
-        stauts: status === undefined ? "" : status, // 使用后端期望的参数名stauts(原文如此)
+        status: status === undefined ? "" : status,
         page: params.page || pagination.current,
         pageSize: params.pageSize || pagination.pageSize,
       };
@@ -65,11 +65,11 @@ const FeedbackPage = () => {
 
       if (response.success) {
         // 处理后端返回的数据
-        const { data, total } = response;
+        const { data } = response;
 
-        if (data && Array.isArray(data)) {
+        if (data && data.order && Array.isArray(data.order)) {
           // 映射字段名到组件使用的字段名
-          const formattedData = data.map((item) => ({
+          const formattedData = data.order.map((item) => ({
             feedBackId: item.id,
             userId: item.userId,
             userName: item.userName,
@@ -93,7 +93,7 @@ const FeedbackPage = () => {
           setPagination({
             ...pagination,
             current: params.page || pagination.current,
-            total: total || 0,
+            total: data.total || 0,
           });
         } else {
           setFeedbacks([]);
@@ -143,16 +143,16 @@ const FeedbackPage = () => {
 
   // 标记单个反馈为已读
   const markAsRead = async (id) => {
-    // 这里需要实现标记为已读的API，暂时使用前端模拟
     try {
       setLoading(true);
 
       const result = await fetchChangeCommentStatus({ commentId: id });
 
-      if (!result.success) {
+      if (result.success) {
+        // 修改这里：成功时才更新状态
         // 更新反馈状态
         const updatedFeedbacks = feedbacks.map((feedback) =>
-          feedback.id === id
+          feedback.feedBackId === id // 修改这里：使用feedBackId而不是id
             ? { ...feedback, feedBackStatus: 1, deliverId: riderId }
             : feedback
         );
@@ -168,7 +168,7 @@ const FeedbackPage = () => {
         setFeedbacks(sortedFeedbacks);
         message.success("已标记为已读");
       } else {
-        message.error("标记为已读失败，请稍后重试");
+        message.error(result.errorMsg || "标记为已读失败，请稍后重试");
       }
     } catch (error) {
       console.error("标记已读失败:", error);
@@ -190,9 +190,12 @@ const FeedbackPage = () => {
           const result = await fetchChangeAllCommentStatus({
             page: pagination.current,
             pageSize: pagination.pageSize,
+            status,
+            userId,
           });
 
-          if (!result.success) {
+          if (result.success) {
+            // 修改这里：成功时才更新状态
             // 更新所有未读反馈为已读
             const updatedFeedbacks = feedbacks.map((feedback) => ({
               ...feedback,
@@ -212,7 +215,7 @@ const FeedbackPage = () => {
             setFeedbacks(sortedFeedbacks);
             message.success("已全部标记为已读");
           } else {
-            message.error("标记全部已读失败，请稍后重试");
+            message.error(result.errorMsg || "标记全部已读失败，请稍后重试");
           }
         } catch (error) {
           console.error("标记全部已读失败:", error);
@@ -378,7 +381,7 @@ const FeedbackPage = () => {
                         type="primary"
                         size="small"
                         icon={<CheckOutlined />}
-                        onClick={() => markAsRead(feedback.id)}
+                        onClick={() => markAsRead(feedback.feedBackId)}
                       >
                         标记为已读
                       </Button>

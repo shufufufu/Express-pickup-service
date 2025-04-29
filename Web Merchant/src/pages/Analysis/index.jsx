@@ -64,12 +64,12 @@ const OrderAnalysis = () => {
       .then((response) => {
         if (response.success && response.data) {
           // 处理API返回的数据
-          processApiData(response.data);
+          processApiData(response.data, activeTab);
         } else {
           messageApi.error(response.errorMsg || "获取数据失败");
           // 如果API调用失败，使用模拟数据
           const mockResponse = generateMockData(activeTab);
-          processApiData(mockResponse.data);
+          processApiData(mockResponse.data, activeTab);
         }
       })
       .catch((error) => {
@@ -77,7 +77,7 @@ const OrderAnalysis = () => {
         messageApi.error("获取数据失败，使用模拟数据");
         // 如果API调用出错，使用模拟数据
         const mockResponse = generateMockData(activeTab);
-        processApiData(mockResponse.data);
+        processApiData(mockResponse.data, activeTab);
       })
       .finally(() => {
         setLoading(false);
@@ -85,22 +85,94 @@ const OrderAnalysis = () => {
   }, [activeTab, messageApi]);
 
   // 处理API返回的数据，转换为图表所需格式
-  const processApiData = (apiData) => {
+  const processApiData = (apiData, timeRange) => {
     // 根据当前选中的时间范围生成日期数组
     const generateDates = () => {
       const today = new Date();
-      return apiData.map((_, index) => {
-        const date = new Date(today);
-        date.setDate(date.getDate() - (apiData.length - 1 - index));
-        return `${date.getMonth() + 1}/${date.getDate()}`;
-      });
+      const dataLength = apiData.length;
+
+      switch (timeRange) {
+        case "week":
+          // 近一周，以天为单位
+          return apiData.map((_, index) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - (dataLength - 1 - index));
+            return `${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
+              .getDate()
+              .toString()
+              .padStart(2, "0")}`;
+          });
+
+        case "month":
+          // 近一个月，以天为单位
+          return apiData.map((_, index) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - (dataLength - 1 - index));
+            return `${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
+              .getDate()
+              .toString()
+              .padStart(2, "0")}`;
+          });
+
+        case "quarter":
+          // 近三个月，以周为单位
+          return apiData.map((_, index) => {
+            // 计算当前周的开始日期（从今天往前算，每7天为一周）
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - (dataLength - 1 - index) * 7);
+
+            // 计算当前周的结束日期
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            // 格式化为 MM-DD~MM-DD 格式
+            return `${(weekStart.getMonth() + 1)
+              .toString()
+              .padStart(2, "0")}-${weekStart
+              .getDate()
+              .toString()
+              .padStart(2, "0")}~${(weekEnd.getMonth() + 1)
+              .toString()
+              .padStart(2, "0")}-${weekEnd
+              .getDate()
+              .toString()
+              .padStart(2, "0")}`;
+          });
+
+        case "halfYear":
+          // 近半年，以月为单位
+          return apiData.map((_, index) => {
+            const date = new Date(today);
+            date.setMonth(today.getMonth() - (dataLength - 1 - index));
+            return `${(date.getMonth() + 1).toString().padStart(2, "0")}月`;
+          });
+
+        default:
+          // 默认以天为单位
+          return apiData.map((_, index) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - (dataLength - 1 - index));
+            return `${(date.getMonth() + 1).toString().padStart(2, "0")}-${date
+              .getDate()
+              .toString()
+              .padStart(2, "0")}`;
+          });
+      }
     };
 
     const dates = generateDates();
-    const totalOrders = apiData.map((item) => item.all);
-    const completedOrders = apiData.map((item) => item.worked);
-    const failedOrders = apiData.map((item) => item.unWorked);
-    const timeDistribution = apiData.map((item) => item.array);
+    const totalOrders = [];
+    const completedOrders = [];
+    const failedOrders = [];
+    const timeDistribution = [];
+
+    // Process data for each date
+    apiData.forEach((item) => {
+      totalOrders.push(item.all);
+      completedOrders.push(item.worked);
+      failedOrders.push(item.unWorked);
+      timeDistribution.push(item.array || [0, 0, 0, 0, 0, 0]); // Ensure we always have valid time distribution data
+    });
 
     setChartData({
       dates,
@@ -170,6 +242,18 @@ const OrderAnalysis = () => {
         type: "category",
         boundaryGap: false,
         data: chartData.dates,
+        // 对于长日期标签（如周格式），增加轴标签的旋转角度
+        axisLabel: {
+          rotate: activeTab === "quarter" ? 30 : 0,
+          interval: "auto",
+          formatter: function (value) {
+            // 对于长日期标签，可以考虑缩短显示
+            if (activeTab === "quarter" && value.includes("~")) {
+              return value.split("~")[0]; // 只显示开始日期
+            }
+            return value;
+          },
+        },
       },
       yAxis: {
         type: "value",
@@ -415,7 +499,7 @@ const OrderAnalysis = () => {
           series: [
             {
               data: hasDimensionOrders
-                ? chartData.timeDistribution[dimension].map((value, index) => ({
+                ? chartData.timeDistribution[dimension].map((value, i) => ({
                     value,
                     name: [
                       "凌晨 (0-4点)",
@@ -424,7 +508,7 @@ const OrderAnalysis = () => {
                       "下午 (12-16点)",
                       "傍晚 (16-20点)",
                       "晚上 (20-24点)",
-                    ][index],
+                    ][i],
                     itemStyle: {
                       color: [
                         "#5470c6",
@@ -433,7 +517,7 @@ const OrderAnalysis = () => {
                         "#ee6666",
                         "#73c0de",
                         "#3ba272",
-                      ][index],
+                      ][i],
                     },
                   }))
                 : [],
@@ -462,7 +546,7 @@ const OrderAnalysis = () => {
       statusPieChart.dispose();
       timePieChart.dispose();
     };
-  }, [chartData, loading, screenWidth]);
+  }, [chartData, loading, screenWidth, activeTab]);
 
   // 处理标签页切换
   const handleTabChange = (key) => {

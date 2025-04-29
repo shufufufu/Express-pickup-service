@@ -5,11 +5,8 @@ const baseUrl = "http://26.81.202.205:8080";
 
 // 统一处理响应
 const handleResponse = (response) => {
-  return {
-    success: response.success,
-    errorMsg: response.errorMsg || "",
-    data: response.data || null,
-  };
+  // 直接返回后端的响应数据
+  return response.data;
 };
 
 // 统一处理错误
@@ -27,12 +24,8 @@ export const fetchUpdateStatus = async (params) => {
   const riderId = getRiderId(); // 获取骑手ID
   try {
     const response = await http({
-      method: "POST",
-      url: `${baseUrl}/shop/changeState`,
-      data: {
-        deliverId: riderId,
-        orderId: params.orderId,
-      },
+      method: "PUT",
+      url: `${baseUrl}/shop/changeState/${params.orderId}/${riderId}`,
       auth: true, // 需要认证
     });
 
@@ -47,15 +40,11 @@ export const fetchGrabStatus = async (params) => {
   const riderId = getRiderId();
   try {
     const response = await http({
-      method: "POST",
-      url: `${baseUrl}/shop/rollOrder`,
-      data: {
-        deliverId: riderId,
-        orderId: params.orderId,
-      },
+      method: "PUT",
+      url: `${baseUrl}/shop/rollOrder/${params.orderId}/${riderId}`,
       auth: true, // 需要认证
     });
-
+    console.log("抢单响应:", response); // 打印响应
     return handleResponse(response);
   } catch (error) {
     return handleError(error);
@@ -65,17 +54,15 @@ export const fetchGrabStatus = async (params) => {
 // 拒绝接单
 export const fetchRejectStatus = async (params) => {
   const riderId = getRiderId();
+  console.log("orderId:", params.orderId); // 打印 riderId
   try {
     const response = await http({
-      method: "POST",
-      url: `${baseUrl}/shop/rejectOrder`,
-      data: {
-        adminId: riderId, // 注意：这里使用adminId而不是deliverId
-        orderId: params.orderId,
-      },
+      method: "PUT",
+      url: `${baseUrl}/shop/rejectOrder/${params.orderId}/${riderId}`,
+
       auth: true, // 需要认证
     });
-
+    console.log("拒绝接单响应:", response); // 打印响应
     return handleResponse(response);
   } catch (error) {
     return handleError(error);
@@ -87,12 +74,8 @@ export const fetchPickFail = async (params) => {
   const riderId = getRiderId();
   try {
     const response = await http({
-      method: "POST",
-      url: `${baseUrl}/shop/pickOrderFailed`,
-      data: {
-        adminId: riderId, // 注意：这里使用adminId而不是deliverId
-        orderId: params.orderId,
-      },
+      method: "PUT",
+      url: `${baseUrl}/shop/pickOrderFailed/${params.orderId}/${riderId}`,
       auth: true, // 需要认证
     });
 
