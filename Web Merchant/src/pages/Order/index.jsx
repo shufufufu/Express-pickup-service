@@ -469,12 +469,13 @@ const OrderManagement = () => {
           title: "剩余时间",
           key: "remainingTime",
           width: 120,
-          render: (_, record) =>
-            record.status === STEP_STATES.STEP1.WAITING ? (
-              <SimpleCountdown value={record.downTime} />
-            ) : (
-              "-"
-            ),
+          render: (_, record) => {
+            if (record.status === STEP_STATES.STEP1.WAITING) {
+              // 使用创建时间作为基准
+              return <SimpleCountdown value={record.createTime} />;
+            }
+            return "-";
+          },
         }
       );
     }
