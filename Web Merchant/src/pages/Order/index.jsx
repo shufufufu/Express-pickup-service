@@ -1,4 +1,3 @@
-// OrderManagement.jsx
 import React, { useState, useEffect } from "react";
 import {
   Table,
@@ -10,8 +9,12 @@ import {
   message,
   Space,
   Popover,
+  Row,
+  Col,
+  Tooltip,
+  Typography,
 } from "antd";
-import { EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, ReloadOutlined } from "@ant-design/icons";
 import {
   STEP_STATES,
   getStatusDesc,
@@ -19,29 +22,46 @@ import {
   getNextStatus,
 } from "./components/STEP_STATES";
 import SimpleCountdown from "./components/Countdown";
-import { ReloadOutlined } from "@ant-design/icons";
 import {
   fetchOrder,
   fetchUpdateStatus,
   fetchGrabStatus,
   fetchRejectStatus,
   fetchPickFail,
-} from "@/apis"; // 根据实际路径调整引入
+} from "@/apis";
+
+const { Title } = Typography;
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState([]); // 订单数据
+  // 保留原有状态
+  const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState({}); // 记录每个订单的操作加载状态
-
-  // 分页状态
+  const [actionLoading, setActionLoading] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  // 加载订单数据（包含分页参数）
+  // 新增响应式状态
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 检测屏幕尺寸
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => {
+      window.removeEventListener("resize", checkScreenSize);
+    };
+  }, []);
+
+  // 保留原有的loadOrders函数
   const loadOrders = async (extraParams = {}) => {
     setLoading(true);
     try {
@@ -68,13 +88,12 @@ const OrderManagement = () => {
     loadOrders();
   }, [currentPage, pageSize]);
 
-  // 处理分页变化
-  const handleTableChange = (page, newPageSize) => {
-    setCurrentPage(page);
-    setPageSize(newPageSize);
+  // 其他原有函数保持不变...
+  const handleTableChange = (pagination) => {
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
   };
 
-  // 根据订单状态过滤
   const getFilteredOrders = () => {
     switch (activeTab) {
       case "waiting":
@@ -106,13 +125,8 @@ const OrderManagement = () => {
   };
 
   const filteredOrders = getFilteredOrders();
+  const refreshOrders = () => loadOrders();
 
-  // 刷新订单（重新加载数据）
-  const refreshOrders = () => {
-    loadOrders();
-  };
-
-  // 直接更新订单状态（本地更新）
   const handleUpdateStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
@@ -122,7 +136,6 @@ const OrderManagement = () => {
     message.success(`订单状态已更新为: ${getStatusDesc(newStatus)}`);
   };
 
-  // 设置订单操作的加载状态
   const setOrderActionLoading = (orderId, isLoading) => {
     setActionLoading((prev) => ({
       ...prev,
@@ -130,31 +143,25 @@ const OrderManagement = () => {
     }));
   };
 
-  // 推进订单状态
   const handleProgressOrder = async (orderId) => {
-    // 检查订单状态
     const order = orders.find((o) => o.id === orderId);
     if (!order) return;
 
     setOrderActionLoading(orderId, true);
 
     try {
-      // 调用状态更新接口
       let result;
       if (order.status === STEP_STATES.STEP1.WAITING) {
-        // 待接单状态，调用抢单接口
         result = await fetchGrabStatus({
           orderId: orderId,
         });
       } else {
-        // 其他状态，调用普通状态更新接口
         result = await fetchUpdateStatus({
           orderId: orderId,
         });
       }
 
       if (result.success) {
-        // 接口调用成功，前端自行更新状态
         const nextStatus = getNextStatus(order.status);
         setOrders((prevOrders) =>
           prevOrders.map((o) =>
@@ -163,7 +170,6 @@ const OrderManagement = () => {
         );
         message.success(`订单状态已更新为: ${getStatusDesc(nextStatus)}`);
       } else {
-        // 接口调用失败
         message.error(result.errorMsg || "状态更新失败，请稍后重试");
       }
     } catch (error) {
@@ -174,7 +180,6 @@ const OrderManagement = () => {
     }
   };
 
-  // 处理拒单
   const handleRejectOrder = (orderId) => {
     Modal.confirm({
       title: "确认拒单",
@@ -199,7 +204,6 @@ const OrderManagement = () => {
     });
   };
 
-  // 处理取件失败
   const handlePickupFailed = (orderId) => {
     Modal.confirm({
       title: "确认取件失败",
@@ -226,16 +230,61 @@ const OrderManagement = () => {
     });
   };
 
-  // 打开订单详情
   const showOrderDetail = (order) => {
     setCurrentOrder(order);
     setDetailModalVisible(true);
   };
 
-  // 根据订单状态返回操作按钮
+  // 根据订单状态返回操作按钮 - 优化移动端显示
   const getActionButtons = (order) => {
     const isLoading = actionLoading[order.id] || false;
 
+    // 移动端视图下简化按钮
+    if (isMobile) {
+      return (
+        <Space size="small">
+          <Button
+            key="view"
+            type="link"
+            icon={<EyeOutlined />}
+            onClick={() => showOrderDetail(order)}
+            disabled={isLoading}
+            style={{ padding: "0 4px" }}
+          >
+            详情
+          </Button>
+          {order.status === STEP_STATES.STEP1.WAITING && (
+            <Button
+              key="accept"
+              type="primary"
+              size="small"
+              onClick={() => handleProgressOrder(order.id)}
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              接单
+            </Button>
+          )}
+          {order.status !== STEP_STATES.STEP1.WAITING &&
+            order.status !== STEP_STATES.STEP1.REJECTED &&
+            order.status !== STEP_STATES.STEP2.FAILED &&
+            order.status !== STEP_STATES.STEP3.DELIVERED && (
+              <Button
+                key="progress"
+                type="primary"
+                size="small"
+                onClick={() => handleProgressOrder(order.id)}
+                loading={isLoading}
+                disabled={isLoading}
+              >
+                更新
+              </Button>
+            )}
+        </Space>
+      );
+    }
+
+    // 桌面视图下完整按钮
     const buttons = [
       <Button
         key="view"
@@ -346,79 +395,92 @@ const OrderManagement = () => {
     return <Space>{buttons}</Space>;
   };
 
-  // 表格列定义
-  const columns = [
-    {
-      title: "订单号",
-      dataIndex: "id",
-      key: "id",
-      width: 135,
-    },
-    {
-      title: "取件码",
-      dataIndex: "expressId",
-      key: "expressId",
-      width: 135,
-    },
-    {
-      title: "送达地址",
-      dataIndex: "dormAdd",
-      key: "dormAdd",
-      ellipsis: true,
-    },
-    {
-      title: "联系电话",
-      dataIndex: "iphoneNumber",
-      key: "iphoneNumber",
-      width: 135,
-    },
-    {
-      title: "备注",
-      dataIndex: "comment",
-      key: "comment",
-      width: 150,
-    },
-    {
-      title: "下单时间",
-      dataIndex: "createTime",
-      key: "createTime",
-      width: 130,
-      render: (createTime) => {
-        const date = new Date(createTime);
-        return `${date.getMonth() + 1}/${date.getDate()} ${date
-          .getHours()
-          .toString()
-          .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+  // 优化表格列定义，根据屏幕尺寸调整
+  const getColumns = () => {
+    const baseColumns = [
+      {
+        title: "订单号",
+        dataIndex: "id",
+        key: "id",
+        width: isMobile ? 80 : 100,
+        ellipsis: true,
       },
-    },
-    {
-      title: "剩余时间",
-      key: "remainingTime",
-      width: 120,
-      render: (_, record) =>
-        record.status === STEP_STATES.STEP1.WAITING ? (
-          <SimpleCountdown value={record.downTime} />
-        ) : (
-          "-"
+      {
+        title: "取件码",
+        dataIndex: "expressId",
+        key: "expressId",
+        width: isMobile ? 80 : 120,
+        ellipsis: true,
+      },
+      {
+        title: "状态",
+        key: "status",
+        width: isMobile ? 80 : 100,
+        render: (_, record) => (
+          <Tag color={getStatusColor(record.status)}>
+            {getStatusDesc(record.status)}
+          </Tag>
         ),
-    },
-    {
-      title: "状态",
-      key: "status",
-      width: 100,
-      render: (_, record) => (
-        <Tag color={getStatusColor(record.status)}>
-          {getStatusDesc(record.status)}
-        </Tag>
-      ),
-    },
-    {
-      title: "操作",
-      key: "action",
-      width: 260,
-      render: (_, record) => getActionButtons(record),
-    },
-  ];
+      },
+      {
+        title: "操作",
+        key: "action",
+        width: isMobile ? 120 : 200,
+        render: (_, record) => getActionButtons(record),
+        fixed: isMobile ? "right" : false,
+      },
+    ];
+
+    // 在非移动设备上添加更多列
+    if (!isMobile) {
+      baseColumns.splice(
+        2,
+        0,
+        {
+          title: "送达地址",
+          dataIndex: "dormAdd",
+          key: "dormAdd",
+          ellipsis: true,
+          width: 150,
+        },
+        {
+          title: "联系电话",
+          dataIndex: "iphoneNumber",
+          key: "iphoneNumber",
+          width: 120,
+        },
+        {
+          title: "下单时间",
+          dataIndex: "createTime",
+          key: "createTime",
+          width: 120,
+          render: (createTime) => {
+            const date = new Date(createTime);
+            return `${date.getMonth() + 1}/${date.getDate()} ${date
+              .getHours()
+              .toString()
+              .padStart(2, "0")}:${date
+              .getMinutes()
+              .toString()
+              .padStart(2, "0")}`;
+          },
+        },
+        {
+          title: "剩余时间",
+          key: "remainingTime",
+          width: 120,
+          render: (_, record) =>
+            record.status === STEP_STATES.STEP1.WAITING ? (
+              <SimpleCountdown value={record.downTime} />
+            ) : (
+              "-"
+            ),
+        }
+      );
+    }
+
+    return baseColumns;
+  };
 
   // 计算各状态订单数量
   const waitingCount = orders.filter(
@@ -441,66 +503,125 @@ const OrderManagement = () => {
     )
   ).length;
 
-  // 选项卡配置
+  // 选项卡配置 - 优化移动端显示
   const tabItems = [
     {
       key: "all",
-      label: `全部订单 (${orders.length})`,
+      label: isMobile ? `全部(${orders.length})` : `全部订单(${orders.length})`,
     },
     {
       key: "waiting",
-      label: `待接单 (${waitingCount})`,
+      label: isMobile ? `待接单(${waitingCount})` : `待接单(${waitingCount})`,
     },
     {
       key: "processing",
-      label: `处理中 (${processingCount})`,
+      label: isMobile
+        ? `处理中(${processingCount})`
+        : `处理中(${processingCount})`,
     },
     {
       key: "completed",
-      label: `已完成 (${completedCount})`,
+      label: isMobile
+        ? `已完成(${completedCount})`
+        : `已完成(${completedCount})`,
     },
     {
       key: "failed",
-      label: `已取消 (${failedCount})`,
+      label: isMobile ? `已取消(${failedCount})` : `已取消(${failedCount})`,
     },
   ];
 
+  // 添加组件样式
+  const cardStyle = {
+    boxShadow:
+      "0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09)",
+    borderRadius: "8px",
+  };
+
   return (
-    <Card title="订单管理中心" className="shadow-md">
+    <Card
+      title={
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>订单管理中心</span>
+          <Tooltip title="刷新订单">
+            <Button
+              type="primary"
+              shape="circle"
+              icon={<ReloadOutlined />}
+              onClick={refreshOrders}
+              size={isMobile ? "middle" : "large"}
+            />
+          </Tooltip>
+        </div>
+      }
+      style={cardStyle}
+      bodyStyle={{ padding: isMobile ? "12px" : "24px" }}
+    >
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
         items={tabItems}
-        className="mb-4"
+        className="order-tabs"
+        size={isMobile ? "small" : "middle"}
+        tabBarStyle={{
+          marginBottom: isMobile ? "8px" : "16px",
+          overflowX: "auto",
+          overflowY: "hidden",
+          whiteSpace: "nowrap",
+          "&::-webkit-scrollbar": { height: "4px" },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#e8e8e8",
+            borderRadius: "4px",
+          },
+        }}
       />
+
       <Table
-        columns={columns}
+        columns={getColumns()}
         dataSource={filteredOrders}
         rowKey="id"
         pagination={{
           current: currentPage,
           pageSize: pageSize,
           total: total,
-          showSizeChanger: true,
+          showSizeChanger: !isMobile,
           onChange: handleTableChange,
           onShowSizeChange: handleTableChange,
-          showQuickJumper: true,
+          showQuickJumper: !isMobile,
+          size: isMobile ? "small" : "default",
+          simple: isMobile,
         }}
         loading={loading}
         locale={{ emptyText: "暂无订单数据" }}
+        size={isMobile ? "small" : "middle"}
+        scroll={{ x: isMobile ? 400 : 1000 }}
+        rowClassName={(record, index) =>
+          index % 2 === 0 ? "table-row-light" : "table-row-dark"
+        }
       />
 
       {/* 订单详情模态框 */}
       {currentOrder && (
         <Modal
           title={
-            <div className="text-xl font-semibold">
+            <div
+              style={{
+                fontSize: isMobile ? "16px" : "18px",
+                fontWeight: "bold",
+              }}
+            >
               订单详情 - {currentOrder.expressId}
             </div>
           }
           open={detailModalVisible}
           onCancel={() => setDetailModalVisible(false)}
-          width={1000}
+          width={isMobile ? "95%" : 800}
           footer={[
             <Button key="back" onClick={() => setDetailModalVisible(false)}>
               关闭
@@ -524,33 +645,76 @@ const OrderManagement = () => {
               ),
           ]}
         >
-          <div className="space-y-4">
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
             {/* 基本信息 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-lg font-medium mb-2 text-gray-700">
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}>
+                <div
+                  style={{
+                    background: "#f5f5f5",
+                    padding: "12px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "bold",
+                      marginBottom: "8px",
+                      color: "#333",
+                    }}
+                  >
                     订单信息
-                  </p>
-                  <div className="space-y-3">
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">订单号：</span>
-                      <span className="font-medium">{currentOrder.id}</span>
-                    </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">取件码：</span>
-                      <span className="font-medium">
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>订单号：</span>
+                      <span style={{ fontWeight: "500" }}>
+                        {currentOrder.id}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>取件码：</span>
+                      <span style={{ fontWeight: "500" }}>
                         {currentOrder.expressId}
                       </span>
-                    </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">订单状态：</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>订单状态：</span>
                       <Tag color={getStatusColor(currentOrder.status)}>
                         {getStatusDesc(currentOrder.status)}
                       </Tag>
-                    </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">下单时间：</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>下单时间：</span>
                       <span>
                         {(() => {
                           const date = new Date(currentOrder.createTime);
@@ -565,29 +729,63 @@ const OrderManagement = () => {
                             .padStart(2, "0")}`;
                         })()}
                       </span>
-                    </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Col>
 
-              <div className="space-y-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-lg font-medium mb-2 text-gray-700">
+              <Col xs={24} md={12}>
+                <div
+                  style={{
+                    background: "#f5f5f5",
+                    padding: "12px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "bold",
+                      marginBottom: "8px",
+                      color: "#333",
+                    }}
+                  >
                     配送信息
-                  </p>
-                  <div className="space-y-3">
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">送达地址：</span>
-                      <span className="font-medium">
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>送达地址：</span>
+                      <span style={{ fontWeight: "500" }}>
                         {currentOrder.dormAdd}
                       </span>
-                    </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">联系电话：</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>联系电话：</span>
                       <span>{currentOrder.iphoneNumber}</span>
-                    </p>
-                    <p className="flex justify-between">
-                      <span className="text-gray-600">截止时间：</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span style={{ color: "#666" }}>截止时间：</span>
                       <span>
                         {(() => {
                           const date = new Date(currentOrder.downTime);
@@ -602,29 +800,66 @@ const OrderManagement = () => {
                             .padStart(2, "0")}`;
                         })()}
                       </span>
-                    </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </Col>
+            </Row>
 
             {/* 备注信息 */}
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-lg font-medium mb-2 text-gray-700">备注信息</p>
-              <p className="text-gray-600">{currentOrder.comment || "无"}</p>
+            <div
+              style={{
+                background: "#f5f5f5",
+                padding: "12px",
+                borderRadius: "8px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  marginBottom: "8px",
+                  color: "#333",
+                }}
+              >
+                备注信息
+              </div>
+              <div style={{ color: "#666" }}>
+                {currentOrder.comment || "无"}
+              </div>
             </div>
 
             {/* 包裹图片 */}
             {currentOrder.image && (
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-lg font-medium mb-2 text-gray-700">
+              <div
+                style={{
+                  background: "#f5f5f5",
+                  padding: "12px",
+                  borderRadius: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    marginBottom: "8px",
+                    color: "#333",
+                  }}
+                >
                   包裹图片
-                </p>
-                <div className="flex justify-center">
+                </div>
+                <div style={{ display: "flex", justifyContent: "center" }}>
                   <img
                     src={currentOrder.image || "/placeholder.svg"}
                     alt="包裹图片"
-                    className="w-64 h-90 object-contain rounded-lg shadow-md"
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                      maxHeight: "200px",
+                      objectFit: "contain",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    }}
                   />
                 </div>
               </div>
@@ -632,19 +867,34 @@ const OrderManagement = () => {
           </div>
         </Modal>
       )}
-      {/* 右下角浮动按钮 */}
-      <div className="fixed right-16 top-40 flex flex-col space-y-4">
-        <Popover content={<span>刷新订单</span>} trigger="hover">
-          <Button
-            type="primary"
-            shape="circle"
-            icon={<ReloadOutlined />}
-            size="large"
-            onClick={refreshOrders}
-            className="bg-blue-400 border-blue-400 hover:bg-blue-600 hover:border-blue-700 hover:scale-105 transform-all duration-300"
-          />
-        </Popover>
-      </div>
+
+      {/* 添加自定义样式 */}
+      <style jsx global>{`
+        .table-row-light {
+          background-color: #ffffff;
+        }
+        .table-row-dark {
+          background-color: #fafafa;
+        }
+        .ant-table-tbody > tr.table-row-light:hover > td,
+        .ant-table-tbody > tr.table-row-dark:hover > td {
+          background-color: #e6f7ff !important;
+        }
+        .order-tabs .ant-tabs-tab {
+          padding: ${isMobile ? "8px 12px" : "12px 16px"};
+        }
+        .ant-table-thead > tr > th {
+          background-color: #f0f5ff;
+          color: #1668dc;
+          font-weight: 500;
+        }
+        @media (max-width: 768px) {
+          .ant-table-thead > tr > th,
+          .ant-table-tbody > tr > td {
+            padding: 8px 4px !important;
+          }
+        }
+      `}</style>
     </Card>
   );
 };

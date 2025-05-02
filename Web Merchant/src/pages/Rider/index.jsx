@@ -16,6 +16,7 @@ import {
   Space,
   Modal,
   Form,
+  Tabs,
 } from "antd";
 import {
   UserOutlined,
@@ -28,12 +29,15 @@ import {
   WomanOutlined,
   CopyOutlined,
   PhoneOutlined,
+  IdcardOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import { fetchDToken, fetchRiderInfo, fetchChangeRiderInfo } from "@/apis";
 import { getRiderId } from "@/utils";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 const PersonalCenter = () => {
   const [userData, setUserData] = useState(null);
@@ -44,8 +48,23 @@ const PersonalCenter = () => {
   const [showTokenBox, setShowTokenBox] = useState(false);
   const [tokenText, setTokenText] = useState("");
   const [saveLoading, setSaveLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const riderId = getRiderId();
+
+  // 检测屏幕尺寸
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => {
+      window.removeEventListener("resize", checkScreenSize);
+    };
+  }, []);
 
   // 获取用户数据
   const getUserData = async () => {
@@ -208,6 +227,259 @@ const PersonalCenter = () => {
     );
   }
 
+  // 移动端视图
+  if (isMobile) {
+    return (
+      <div className="px-2">
+        <Card className="shadow-md">
+          <div className="flex justify-between items-center mb-4">
+            <Title level={3} className="m-0">
+              个人中心
+            </Title>
+            {!editing ? (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                size="small"
+                onClick={handleEditToggle}
+              >
+                编辑
+              </Button>
+            ) : (
+              <Space size="small">
+                <Button size="small" onClick={handleEditToggle}>
+                  取消
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  size="small"
+                  onClick={handleSave}
+                  disabled={!hasChanges}
+                  loading={saveLoading}
+                >
+                  保存
+                </Button>
+              </Space>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center mb-6">
+            <Avatar
+              size={80}
+              src={userData?.avatar}
+              icon={<UserOutlined />}
+              className="border-2 border-white shadow-md"
+            />
+            <div className="mt-3 text-center">
+              <Text strong className="text-lg block">
+                {userData?.name || "未设置昵称"}
+              </Text>
+              <div className="flex items-center justify-center mt-1">
+                <IdcardOutlined className="mr-1 text-gray-500" />
+                <Text type="secondary">{userData?.riderId}</Text>
+              </div>
+              <div className="flex items-center justify-center mt-1">
+                <StarFilled className="text-yellow-500 mr-1" />
+                <Text>{userData?.favor}</Text>
+              </div>
+            </div>
+          </div>
+
+          <Tabs defaultActiveKey="1" centered size="small" className="mt-4">
+            <TabPane tab="基本信息" key="1">
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Text type="secondary" className="block mb-1">
+                    昵称
+                  </Text>
+                  {editing ? (
+                    <Input
+                      value={editData.name}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
+                      placeholder="请输入昵称"
+                      maxLength={20}
+                      size="middle"
+                    />
+                  ) : (
+                    <Text strong>{userData?.name}</Text>
+                  )}
+                </div>
+
+                <div>
+                  <Text type="secondary" className="block mb-1">
+                    性别
+                  </Text>
+                  {editing ? (
+                    <Select
+                      value={editData.gender}
+                      onChange={(value) => handleInputChange("gender", value)}
+                      style={{ width: "100%" }}
+                      size="middle"
+                    >
+                      <Option value="male">
+                        <ManOutlined className="text-blue-500 mr-1" /> 男
+                      </Option>
+                      <Option value="female">
+                        <WomanOutlined className="text-pink-500 mr-1" /> 女
+                      </Option>
+                    </Select>
+                  ) : (
+                    <div className="flex items-center">
+                      {userData?.gender === "male" ? (
+                        <>
+                          <ManOutlined className="text-blue-500 mr-1" />
+                          <Text>男</Text>
+                        </>
+                      ) : (
+                        <>
+                          <WomanOutlined className="text-pink-500 mr-1" />
+                          <Text>女</Text>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Text type="secondary" className="block mb-1">
+                    年龄
+                  </Text>
+                  {editing ? (
+                    <Select
+                      value={editData.age}
+                      onChange={(value) => handleInputChange("age", value)}
+                      style={{ width: "100%" }}
+                      size="middle"
+                    >
+                      {ageOptions}
+                    </Select>
+                  ) : (
+                    <Text>{userData?.age}岁</Text>
+                  )}
+                </div>
+
+                <div>
+                  <Text type="secondary" className="block mb-1">
+                    联系电话
+                  </Text>
+                  {editing ? (
+                    <Input
+                      value={editData.phone}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
+                      placeholder="请输入联系电话"
+                      maxLength={11}
+                      addonBefore={<PhoneOutlined />}
+                      size="middle"
+                    />
+                  ) : (
+                    <div className="flex items-center">
+                      <PhoneOutlined className="mr-2 text-gray-500" />
+                      <Text>{userData?.phone}</Text>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Text type="secondary" className="block mb-1">
+                    入职日期
+                  </Text>
+                  <div className="flex items-center">
+                    <CalendarOutlined className="mr-2 text-gray-500" />
+                    <Text>
+                      {userData?.joinTime
+                        ? new Date(userData.joinTime)
+                            .toLocaleDateString("zh-CN", {
+                              year: "numeric",
+                              month: "numeric",
+                              day: "numeric",
+                            })
+                            .replace(/\//g, "-")
+                        : ""}
+                    </Text>
+                  </div>
+                </div>
+
+                <div>
+                  <Text type="secondary" className="block mb-1">
+                    工作时长
+                  </Text>
+                  <Text>{calculateWorkDuration(userData?.joinTime)}</Text>
+                </div>
+              </div>
+            </TabPane>
+            <TabPane tab="工作统计" key="2">
+              <div className="mt-4 space-y-4">
+                <Card className="text-center hover:shadow-sm transition-shadow">
+                  <Statistic
+                    title="总配送订单"
+                    value={userData?.deliveredOrders}
+                    prefix={<ShoppingOutlined />}
+                    valueStyle={{ color: "#1890ff" }}
+                  />
+                </Card>
+                <Card className="text-center hover:shadow-sm transition-shadow">
+                  <Statistic
+                    title="本周配送"
+                    value={userData?.weekDeliveredOrders}
+                    prefix={<ShoppingOutlined />}
+                    valueStyle={{ color: "#52c41a" }}
+                  />
+                </Card>
+                <Card className="text-center hover:shadow-sm transition-shadow">
+                  <Statistic
+                    title="用户评分"
+                    value={userData?.favor}
+                    precision={1}
+                    prefix={<StarFilled />}
+                    suffix="/ 5"
+                    valueStyle={{ color: "#faad14" }}
+                  />
+                </Card>
+              </div>
+            </TabPane>
+          </Tabs>
+
+          {/* 动态令牌区域 */}
+          {riderId <= 3 && (
+            <div className="mt-6">
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleGetDToken}
+                size="middle"
+                block
+              >
+                获取动态令牌
+              </Button>
+
+              {showTokenBox && (
+                <div className="mt-4 p-3 bg-gray-100 border rounded-md border-gray-400 flex flex-col items-start">
+                  <Text code className="text-sm break-all mb-2 w-full">
+                    {tokenText}
+                  </Text>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<CopyOutlined />}
+                    onClick={handleCopyToken}
+                  >
+                    复制
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // 桌面端视图
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="shadow-md">
@@ -239,7 +511,7 @@ const PersonalCenter = () => {
           )}
         </div>
 
-        <div className="bg-gray-50 p-8 rounded-lg">
+        <div className="bg-gray-50 p-6 sm:p-8 rounded-lg">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
             <div className="flex flex-col items-center">
               <Avatar
@@ -391,7 +663,12 @@ const PersonalCenter = () => {
           <Divider />
 
           <div className="mt-8">
-            <Title level={4}>工作统计</Title>
+            <div className="flex items-center mb-4">
+              <BarChartOutlined className="text-blue-500 mr-2" />
+              <Title level={4} className="m-0">
+                工作统计
+              </Title>
+            </div>
             <Row gutter={[24, 24]} className="mt-4">
               <Col xs={24} sm={12} md={8}>
                 <Card className="text-center hover:shadow-md transition-shadow">
