@@ -1,6 +1,6 @@
 import Taro from "@tarojs/taro";
 import { getUserId } from "../utils/auth";
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 
 export const fetchDeliver = async (deliverinfo) => {
   const userId = getUserId();

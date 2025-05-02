@@ -1,6 +1,6 @@
 import Taro from "@tarojs/taro";
 
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 
 /**
  * 上传订单图片并关联订单号
@@ -13,7 +13,7 @@ export const fetchOrderImages = async (filePath, orderId) => {
     // 验证orderId是否为有效数字
     const orderIdNum = Number(orderId);
     if (isNaN(orderIdNum) || !orderId) {
-      throw new Error('订单号必须是有效数字');
+      throw new Error("订单号必须是有效数字");
     }
 
     const res = await Taro.uploadFile({

@@ -27,37 +27,6 @@ const OrderBox = (props) => {
   const [statusIndex, setStatusIndex] = useState(props.data.status);
   const currentStatus = testStatusSequence[statusIndex];
 
-  // 获取当前状态的描述
-  const getStatusDesc = () => {
-    switch (currentStatus) {
-      case STEP_STATES.STEP1.WAITING: //0
-        return "待接单";
-      case STEP_STATES.STEP1.ACCEPTED: //1
-        return "已接单";
-      case STEP_STATES.STEP1.REJECTED: //2
-        return "未接单";
-      case STEP_STATES.STEP2.PICKING: //3
-        return "正在取件";
-      case STEP_STATES.STEP2.SUCCESS: //4
-        return "取件成功";
-      case STEP_STATES.STEP2.FAILED: //5
-        return "取件失败";
-      case STEP_STATES.STEP3.DELIVERING: //6
-        return "配送中";
-      case STEP_STATES.STEP3.DELIVERED: //7
-        return "已送达";
-      default:
-        return "未知状态";
-    }
-  };
-
-  // 处理步骤切换
-  const handleCycleStatus = (e) => {
-    // 阻止事件冒泡，避免触发卡片点击
-    e.stopPropagation();
-    setStatusIndex((prev) => (prev + 1) % testStatusSequence.length);
-  };
-
   // 处理卡片点击，跳转到订单详情
   const navigateToOrderDetail = () => {
     // 准备要传递的参数
@@ -100,12 +69,6 @@ const OrderBox = (props) => {
       <View className="flex justify-between items-center">
         <View className="text-2xl font-medium text-[#3b3c3d]">
           {props.data.expressId}
-        </View>
-        <View
-          className="px-3 py-1 bg-white/20 rounded-full text-[#3b3c3d] text-sm cursor-pointer active:bg-white/30"
-          onClick={handleCycleStatus}
-        >
-          测试: {getStatusDesc()}
         </View>
       </View>
       <View className="mt-2 text-[#3b3c3d]">{props.data.dormAdd}</View>

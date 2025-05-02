@@ -4,16 +4,13 @@ import OrderBox from "./components/orderbox";
 import { PullRefresh, Empty, NoticeBar, BackTop } from "@taroify/core";
 import { usePageScroll } from "@tarojs/taro";
 import { VolumeOutlined } from "@taroify/icons"; // 需要正确引入图标
-import { checkLoginStatus } from '../../utils/auth'; // 更新导入路径
-import LoginPopup from '../../components/LoginPopup';
-import Taro from '@tarojs/taro';
-import { fetchOrder } from '../../apis';
-import { useDidShow } from '@tarojs/taro';
-
+import { checkLoginStatus } from "../../utils/auth"; // 更新导入路径
+import LoginPopup from "../../components/LoginPopup";
+import Taro from "@tarojs/taro";
+import { fetchOrder } from "../../apis";
+import { useDidShow } from "@tarojs/taro";
 
 const oneDay = 24 * 60 * 60 * 1000; // 一天的毫秒数
-
-
 
 export default function Order() {
   const [orderData, setOrderData] = useState([]);
@@ -34,15 +31,15 @@ export default function Order() {
         // 计算下单后经过的时间
         const elapsed = now - item.createTime;
         // 剩余时间 = 24小时 - 已经过的时间（不处理订单过期的逻辑）
-        const downtime = Math.max(0, oneDay - elapsed);
+        const downTime = Math.max(0, oneDay - elapsed);
         return {
           ...item,
-          downtime, // 传给 OrderBox 用于展示倒计时（单位：毫秒）
+          downTime, // 传给 OrderBox 用于展示倒计时（单位：毫秒）
         };
       });
       setOrderData(refreshedData);
     } catch (error) {
-      console.error('获取订单数据失败:', error);
+      console.error("获取订单数据失败:", error);
     } finally {
       setLoading(false);
     }
@@ -89,17 +86,16 @@ export default function Order() {
   };
 
   return (
-  <PullRefresh
-        loading={loading}
-        reachTop={reachTop}
-        onRefresh={delayedRefresh}
-        loadingText="刷新中..."
-        pullingText="下拉刷新"
-        loosingText="释放刷新"
-        successText="刷新成功"
-  >
-    <View className="bg-gray-100 min-h-screen">
-      
+    <PullRefresh
+      loading={loading}
+      reachTop={reachTop}
+      onRefresh={delayedRefresh}
+      loadingText="刷新中..."
+      pullingText="下拉刷新"
+      loosingText="释放刷新"
+      successText="刷新成功"
+    >
+      <View className="bg-gray-100 min-h-screen">
         <View className="pb-4">
           {orderData.length === 0 ? (
             <Empty>
@@ -121,23 +117,22 @@ export default function Order() {
             </>
           )}
           <BackTop
-            right={30}         // 距离页面右侧的距离
-            bottom={40}        // 距离页面底部的距离
-            offset={200}       // 滚动高度达到200px时显示 BackTop
+            right={30} // 距离页面右侧的距离
+            bottom={40} // 距离页面底部的距离
+            offset={200} // 滚动高度达到200px时显示 BackTop
             onClick={() => {
               Taro.pageScrollTo({
                 scrollTop: 0,
                 duration: 300, // 滚动持续时间
               });
             }}
-            zIndex={100}       // 层级
+            zIndex={100} // 层级
           />
         </View>
-      
 
-      {/* 登录弹窗 */}
-      <LoginPopup open={loginPopupOpen} onClose={handleCloseLoginPopup} />
-    </View>
-  </PullRefresh>
+        {/* 登录弹窗 */}
+        <LoginPopup open={loginPopupOpen} onClose={handleCloseLoginPopup} />
+      </View>
+    </PullRefresh>
   );
 }
