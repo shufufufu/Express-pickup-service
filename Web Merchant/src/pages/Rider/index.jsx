@@ -363,7 +363,17 @@ const PersonalCenter = () => {
                     </Text>
                     <div className="flex items-center">
                       <CalendarOutlined className="mr-2 text-gray-500" />
-                      <Text>{userData?.joinTime}</Text>
+                      <Text>
+                        {userData?.joinTime
+                          ? new Date(userData.joinTime)
+                              .toLocaleDateString("zh-CN", {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                              })
+                              .replace(/\//g, "-")
+                          : ""}
+                      </Text>
                     </div>
                   </div>
 

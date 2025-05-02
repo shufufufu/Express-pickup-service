@@ -1,6 +1,6 @@
 import { http } from "@/utils/index";
 
-const baseUrl = "http://8.152.204.181:8080";
+const baseUrl = "/api";
 
 export const fetchAnalysisData = async (timeRange) => {
   // 将时间范围转换为对应的状态码

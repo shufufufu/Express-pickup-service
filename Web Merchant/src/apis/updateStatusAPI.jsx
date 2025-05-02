@@ -1,7 +1,7 @@
 import { http } from "@/utils/index";
 import { getRiderId } from "@/utils/index";
 
-const baseUrl = "http://8.152.204.181:8080";
+const baseUrl = "/api";
 
 // 统一处理响应
 const handleResponse = (response) => {

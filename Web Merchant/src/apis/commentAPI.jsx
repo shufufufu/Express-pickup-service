@@ -1,7 +1,7 @@
 import { http } from "@/utils/index";
 import { getRiderId } from "@/utils/index";
 
-const baseUrl = "http://8.152.204.181:8080";
+const baseUrl = "/api";
 const riderId = getRiderId(); // 获取骑手ID
 
 export const fetchGetComment = async (params) => {
