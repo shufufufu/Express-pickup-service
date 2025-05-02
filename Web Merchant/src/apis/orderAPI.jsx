@@ -1,7 +1,7 @@
 import { http } from "@/utils/index";
 import { getRiderId } from "@/utils/index";
 
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 
 export const fetchOrder = async (params) => {
   const riderId = getRiderId(); // 获取骑手ID
@@ -15,7 +15,6 @@ export const fetchOrder = async (params) => {
       },
       auth: true, // 需要认证
     });
-    console.log("获取订单成功:", response.data);
     return response.data;
   } catch (error) {
     // 处理错误

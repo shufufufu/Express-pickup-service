@@ -250,9 +250,9 @@ const AnnouncementPage = () => {
   // 根据状态判断公告状态
   const getAnnouncementStatus = (status) => {
     switch (status) {
-      case 0:
-        return { color: "blue", text: "待展示" };
       case 1:
+        return { color: "blue", text: "待展示" };
+      case 0:
         return { color: "success", text: "当前展示中" };
       case 2:
         return { color: "default", text: "已过期" };
@@ -406,7 +406,7 @@ const AnnouncementPage = () => {
                       </Space>,
                     ]}
                     className={`p-4 rounded-lg mb-4 transition-all duration-300 hover:shadow-md ${
-                      item.status === 1
+                      item.status === 0
                         ? "border-l-4 border-green-500 bg-green-50"
                         : item.status === 2
                         ? "border-l-4 border-gray-300 bg-gray-50"

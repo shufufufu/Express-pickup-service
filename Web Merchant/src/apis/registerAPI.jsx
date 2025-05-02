@@ -1,8 +1,7 @@
 import { http } from "@/utils/index";
-import { getRiderId } from "@/utils/index";
 import { useUserStore } from "@/store/useUserStore";
 
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 
 /**
  * 用户登录
@@ -50,16 +49,14 @@ export const fetchDToken = async () => {
     };
   }
 
-  const riderId = getRiderId(); // 获取骑手ID
+  //const riderId = getRiderId(); // 获取骑手ID
   try {
     const response = await http({
       method: "GET",
       url: `${baseUrl}/shop/create`,
-      params: { riderId },
       auth: true, // 需要认证
     });
-
-    if (response.data.success) {
+    if (response.data) {
       // 存储新的动态令牌
       store.setDynamicToken(response.data.data);
     }

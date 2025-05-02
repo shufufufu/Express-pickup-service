@@ -1,7 +1,7 @@
 import { http } from "@/utils/index";
 import { getRiderId } from "@/utils/index";
 
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 const riderId = getRiderId(); // 获取骑手ID
 //发布公告接口
 export const fetchReleaseBroadcast = async (params) => {
@@ -44,7 +44,6 @@ export const fetchHistoryBroadcast = async (params) => {
       url: `${baseUrl}/shop/select/broadcast/${page}/${pageSize}`,
       auth: true, // 需要认证
     });
-    console.log("获取历史公告成功:", response.data);
     return response.data;
   } catch (error) {
     // 处理错误
@@ -88,8 +87,8 @@ export const fetchEditBroadcast = async (params) => {
   const { id, title, content, startTime, endTime } = params;
   try {
     const response = await http({
-      method: "PUT",
-      url: `${baseUrl}/shop/update/broadcast`,
+      method: "POST",
+      url: `${baseUrl}/shop/change/broadcast`,
       data: {
         deliverId: riderId,
         id: id,

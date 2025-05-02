@@ -1,39 +1,40 @@
-// 订单状态常量
+// 订单状态常量，使用数字值以匹配后端返回值
 export const STEP_STATES = {
   STEP1: {
-    WAITING: "STEP1_WAITING", // 等待接单
-    ACCEPTED: "STEP1_ACCEPTED", // 已接单
-    REJECTED: "STEP1_REJECTED", // 已拒单
+    WAITING: 0,     // 待接单
+    ACCEPTED: 1,    // 已接单
+    REJECTED: 2,    // 拒单
   },
   STEP2: {
-    PICKING: "STEP2_PICKING", // 取件中
-    SUCCESS: "STEP2_SUCCESS", // 取件成功
-    FAILED: "STEP2_FAILED", // 取件失败
+    PICKING: 3,     // 取件中
+    SUCCESS: 4,     // 取件成功
+    FAILED: 5,      // 取件失败
   },
   STEP3: {
-    DELIVERING: "STEP3_DELIVERING", // 配送中
-    DELIVERED: "STEP3_DELIVERED", // 已送达
-  },
-}
+    DELIVERING: 6,  // 配送中
+    DELIVERED: 7    // 已送达
+  }
+};
 
 // 获取状态描述
 export const getStatusDesc = (status) => {
-  switch (status) {
-    case STEP_STATES.STEP1.WAITING:
+  const statusNum = Number(status);
+  switch (statusNum) {
+    case 0:
       return "待接单"
-    case STEP_STATES.STEP1.ACCEPTED:
+    case 1:
       return "已接单"
-    case STEP_STATES.STEP1.REJECTED:
+    case 2:
       return "已拒单"
-    case STEP_STATES.STEP2.PICKING:
+    case 3:
       return "取件中"
-    case STEP_STATES.STEP2.SUCCESS:
+    case 4:
       return "取件成功"
-    case STEP_STATES.STEP2.FAILED:
+    case 5:
       return "取件失败"
-    case STEP_STATES.STEP3.DELIVERING:
+    case 6:
       return "配送中"
-    case STEP_STATES.STEP3.DELIVERED:
+    case 7:
       return "已送达"
     default:
       return "未知状态"
@@ -42,25 +43,25 @@ export const getStatusDesc = (status) => {
 
 // 获取状态颜色
 export const getStatusColor = (status) => {
-  switch (status) {
-    case STEP_STATES.STEP1.WAITING:
-      return "blue"
-    case STEP_STATES.STEP1.ACCEPTED:
-      return "cyan"
-    case STEP_STATES.STEP1.REJECTED:
-      return "red"
-    case STEP_STATES.STEP2.PICKING:
-      return "geekblue"
-    case STEP_STATES.STEP2.SUCCESS:
-      return "green"
-    case STEP_STATES.STEP2.FAILED:
-      return "red"
-    case STEP_STATES.STEP3.DELIVERING:
-      return "purple"
-    case STEP_STATES.STEP3.DELIVERED:
-      return "green"
+  const statusNum = Number(status);
+  switch (statusNum) {
+    case 0:
+      return "gold"      // 待接单 - 金色
+    case 1:
+      return "blue"      // 已接单 - 蓝色
+    case 2:
+      return "red"       // 已拒单 - 红色
+    case 3:
+      return "blue"      // 取件中 - 蓝色
+    case 4:
+      return "blue"      // 取件成功 - 蓝色
+    case 5:
+      return "red"       // 取件失败 - 红色
+    case 6:
+      return "blue"      // 配送中 - 蓝色
+    case 7:
+      return "green"     // 已送达 - 绿色
     default:
-      return "default"
+      return "default"   // 未知状态 - 默认颜色
   }
 }
-

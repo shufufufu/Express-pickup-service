@@ -1,7 +1,7 @@
 import { http } from "@/utils/index";
 import { getRiderId } from "@/utils/index";
 
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 
 // 统一处理响应
 const handleResponse = (response) => {
@@ -44,7 +44,6 @@ export const fetchGrabStatus = async (params) => {
       url: `${baseUrl}/shop/rollOrder/${params.orderId}/${riderId}`,
       auth: true, // 需要认证
     });
-    console.log("抢单响应:", response); // 打印响应
     return handleResponse(response);
   } catch (error) {
     return handleError(error);
@@ -62,7 +61,6 @@ export const fetchRejectStatus = async (params) => {
 
       auth: true, // 需要认证
     });
-    console.log("拒绝接单响应:", response); // 打印响应
     return handleResponse(response);
   } catch (error) {
     return handleError(error);

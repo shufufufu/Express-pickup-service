@@ -1,15 +1,31 @@
 import { createBrowserRouter } from "react-router-dom";
-
-import Login from "@/pages/Login";
-import Layout from "@/pages/Layout";
-import Order from "@/pages/Order";
-import History from "@/pages/History";
-import Analysis from "@/pages/Analysis";
-import Comment from "@/pages/Comment";
-import Riderinfo from "@/pages/Rider";
-import Register from "@/pages/Register";
-import Broadcast from "@/pages/Broadcast";
+import { lazy, Suspense } from "react";
 import AuthRoute from "@/pages/components/AuthRoute";
+
+// 布局组件直接导入以避免闪烁
+import Layout from "@/pages/Layout";
+// 订单处理作为核心功能直接导入
+import Order from "@/pages/Order";
+
+// 懒加载组件
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
+
+// 次常用功能组
+const History = lazy(() => import("@/pages/History"));
+const Analysis = lazy(() => import("@/pages/Analysis"));
+
+// 辅助功能组
+const Comment = lazy(() => import("@/pages/Comment"));
+const Riderinfo = lazy(() => import("@/pages/Rider"));
+const Broadcast = lazy(() => import("@/pages/Broadcast"));
+
+// 加载提示组件
+const LoadingComponent = () => (
+  <div className="flex justify-center items-center h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  </div>
+);
 
 export const router = createBrowserRouter([
   {
@@ -22,37 +38,65 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Order />,
+        element: <Order />, // 核心功能不需要懒加载
       },
       {
         path: "history",
-        element: <History />,
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <History />
+          </Suspense>
+        ),
       },
       {
         path: "analysis",
-        element: <Analysis />,
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <Analysis />
+          </Suspense>
+        ),
       },
       {
         path: "comment",
-        element: <Comment />,
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <Comment />
+          </Suspense>
+        ),
       },
       {
         path: "broadcast",
-        element: <Broadcast />,
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <Broadcast />
+          </Suspense>
+        ),
       },
       {
         path: "riderinfo",
-        element: <Riderinfo />,
+        element: (
+          <Suspense fallback={<LoadingComponent />}>
+            <Riderinfo />
+          </Suspense>
+        ),
       },
     ],
   },
   {
     path: "/login",
-    element: <Login />,
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <Login />
+      </Suspense>
+    ),
   },
   {
     path: "/register",
-    element: <Register />,
+    element: (
+      <Suspense fallback={<LoadingComponent />}>
+        <Register />
+      </Suspense>
+    ),
   },
   {
     path: "*",

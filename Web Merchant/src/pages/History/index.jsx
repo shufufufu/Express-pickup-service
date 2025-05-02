@@ -30,8 +30,6 @@ import {
 import { getStatusDesc, getStatusColor, STEP_STATES } from "./components/utils";
 import { fetchHistoryOrder, fetchPHistoryOrder } from "@/apis"; // 假设我们将接口函数放在这个位置
 import { getRiderId } from "@/utils/index"; // 获取骑手ID的函数
-import { generateMockOrders } from "./components/mockData"; // 模拟数据，可选使用
-
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -50,8 +48,6 @@ const HistoryOrders = () => {
   const [filterForm] = Form.useForm();
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState({});
-  const [useMockData, setUseMockData] = useState(false); // 是否使用模拟数据
-
   // 获取订单数据
   const fetchOrders = async (params = {}) => {
     setLoading(true);
@@ -71,26 +67,10 @@ const HistoryOrders = () => {
 
     try {
       let result;
-
-      if (useMockData) {
-        // 使用模拟数据
-        const mockResult = generateMockOrders(queryParams);
-        result = {
-          success: true,
-          data: {
-            list: mockResult.data,
-            total: mockResult.total,
-          },
-        };
-        // 模拟网络延迟
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (activeTab === "personal") {
+        result = await fetchPHistoryOrder(queryParams);
       } else {
-        // 使用真实API
-        if (activeTab === "personal") {
-          result = await fetchPHistoryOrder(queryParams);
-        } else {
-          result = await fetchHistoryOrder(queryParams);
-        }
+        result = await fetchHistoryOrder(queryParams);
       }
 
       if (result.success) {
@@ -174,13 +154,6 @@ const HistoryOrders = () => {
     setFilters(newFilters);
     setPagination({ ...pagination, current: 1 });
     fetchOrders({ page: 1, ...newFilters });
-  };
-
-  // 切换数据源（模拟/真实）
-  const toggleDataSource = () => {
-    setUseMockData(!useMockData);
-    message.info(`已切换到${!useMockData ? "模拟" : "真实"}数据源`);
-    fetchOrders({ page: 1 });
   };
 
   // 表格列定义
@@ -342,12 +315,6 @@ const HistoryOrders = () => {
           >
             刷新
           </Button>
-          {/* 开发环境下显示切换数据源按钮 */}
-          {import.meta.env.MODE === "development" && (
-            <Button onClick={toggleDataSource}>
-              {useMockData ? "使用真实数据" : "使用模拟数据"}
-            </Button>
-          )}
         </Space>
       }
     >

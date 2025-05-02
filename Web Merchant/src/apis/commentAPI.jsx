@@ -1,12 +1,11 @@
 import { http } from "@/utils/index";
 import { getRiderId } from "@/utils/index";
 
-const baseUrl = "http://26.81.202.205:8080";
+const baseUrl = "http://8.152.204.181:8080";
 const riderId = getRiderId(); // 获取骑手ID
 
 export const fetchGetComment = async (params) => {
   const { userId, status, page, pageSize } = params;
-  console.log("获取评论请求参数:", { userId, status, page, pageSize });
   try {
     const response = await http({
       method: "POST",
@@ -90,7 +89,7 @@ export const fetchChangeCommentStatus = async (params) => {
 //一键更新当前页所有评论的状态（即全部标为已读按钮）
 export const fetchChangeAllCommentStatus = async (params) => {
   const { page, pageSize, status, userId } = params;
-  console.log("获取评论请求参数:", { userId, status, page, pageSize });
+
   try {
     const response = await http({
       method: "POST",

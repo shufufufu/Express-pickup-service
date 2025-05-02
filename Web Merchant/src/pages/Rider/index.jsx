@@ -177,7 +177,7 @@ const PersonalCenter = () => {
   const handleGetDToken = async () => {
     try {
       const response = await fetchDToken();
-      if (response.success) {
+      if (response.data) {
         setTokenText(response.data);
         setShowTokenBox(true);
         message.success("动态令牌获取成功");
