@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.png";
 import OUP from "@/assets/OUP.png";
 import { fetchRegister } from "@/apis";
+import loginPic from "@/assets/login.jpg";
 
 const RegisterPage = () => {
   const [form] = Form.useForm();
@@ -43,7 +44,7 @@ const RegisterPage = () => {
   return (
     <div
       className="flex min-h-screen w-full items-start pt-20 justify-center bg-cover bg-center"
-      style={{ backgroundImage: `url('/src/assets/login.jpg')` }}
+      style={{ backgroundImage: `url(${loginPic})` }}
     >
       {contextHolder}
       <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white/20 p-8 shadow-xl backdrop-blur-sm">
