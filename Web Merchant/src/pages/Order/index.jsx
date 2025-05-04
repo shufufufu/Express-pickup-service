@@ -61,15 +61,16 @@ const OrderManagement = () => {
     };
   }, []);
 
-  // 保留原有的loadOrders函数
+  // 修改后的loadOrders函数，添加调试日志
   const loadOrders = async (extraParams = {}) => {
     setLoading(true);
     try {
-      const result = await fetchOrder({
+      const params = {
         page: currentPage,
         pageSize,
         ...extraParams,
-      });
+      };
+      const result = await fetchOrder(params);
       setLoading(false);
       if (result.success && result.data) {
         setOrders(result.data.order || []);
@@ -85,13 +86,22 @@ const OrderManagement = () => {
 
   // 初始化加载
   useEffect(() => {
+    console.log("页码或每页条数变化, 重新加载数据:", { currentPage, pageSize });
     loadOrders();
   }, [currentPage, pageSize]);
 
-  // 其他原有函数保持不变...
-  const handleTableChange = (pagination) => {
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
+  // 修改后的handleTableChange函数
+  const handleTableChange = (pagination, filters, sorter) => {
+    console.log("表格变化:", pagination, filters, sorter);
+    // 只有当页码或每页条数变化时才更新状态
+    if (
+      pagination.current !== currentPage ||
+      pagination.pageSize !== pageSize
+    ) {
+      console.log("更新分页状态:", pagination.current, pagination.pageSize);
+      setCurrentPage(pagination.current);
+      setPageSize(pagination.pageSize);
+    }
   };
 
   const getFilteredOrders = () => {
@@ -125,7 +135,12 @@ const OrderManagement = () => {
   };
 
   const filteredOrders = getFilteredOrders();
-  const refreshOrders = () => loadOrders();
+
+  // 刷新订单时重置为第一页
+  const refreshOrders = () => {
+    setCurrentPage(1);
+    loadOrders({ page: 1 });
+  };
 
   const handleUpdateStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
@@ -566,7 +581,10 @@ const OrderManagement = () => {
     >
       <Tabs
         activeKey={activeTab}
-        onChange={setActiveTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          setCurrentPage(1); // 切换标签时重置为第一页
+        }}
         items={tabItems}
         className="order-tabs"
         size={isMobile ? "small" : "middle"}
@@ -592,11 +610,10 @@ const OrderManagement = () => {
           pageSize: pageSize,
           total: total,
           showSizeChanger: !isMobile,
-          onChange: handleTableChange,
-          onShowSizeChange: handleTableChange,
           showQuickJumper: !isMobile,
           size: isMobile ? "small" : "default",
           simple: isMobile,
+          showTotal: (total) => `共 ${total} 条记录`,
         }}
         loading={loading}
         locale={{ emptyText: "暂无订单数据" }}
@@ -605,6 +622,7 @@ const OrderManagement = () => {
         rowClassName={(record, index) =>
           index % 2 === 0 ? "table-row-light" : "table-row-dark"
         }
+        onChange={handleTableChange}
       />
 
       {/* 订单详情模态框 */}

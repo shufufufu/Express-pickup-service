@@ -25,20 +25,39 @@ export const fetchOrderImages = async (filePath, orderId) => {
       },
     });
 
+    // 检查HTTP状态码
+    if (res.statusCode !== 200) {
+      throw new Error(`服务器返回错误状态码: ${res.statusCode}`);
+    }
+
+    // 输出原始响应数据以便调试
+    console.log("服务器原始响应:", res.data);
+
     let data;
     try {
-      data = JSON.parse(res.data);
+      // 检查res.data是否已经是对象
+      if (typeof res.data === "object") {
+        data = res.data;
+      } else {
+        data = JSON.parse(res.data);
+      }
     } catch (e) {
+      console.error("数据解析错误，原始数据:", res.data);
       throw new Error("返回数据解析失败");
     }
 
     if (!data.success) {
-      throw new Error(data.errorcheck || "后端返回失败");
+      throw new Error(data.errorcheck || data.message || "后端返回失败");
     }
 
     return data;
   } catch (error) {
     console.error("上传失败:", error);
-    throw new Error(`图片上传失败: ${error.message}`);
+    // 添加更多错误信息
+    if (error.message.includes("返回数据解析失败")) {
+      throw new Error(`图片上传失败: ${error.message}，请联系技术支持`);
+    } else {
+      throw new Error(`图片上传失败: ${error.message}`);
+    }
   }
 };

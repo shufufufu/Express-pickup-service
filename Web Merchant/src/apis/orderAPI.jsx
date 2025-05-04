@@ -5,13 +5,16 @@ const baseUrl = "/api";
 
 export const fetchOrder = async (params) => {
   const riderId = getRiderId(); // 获取骑手ID
+  const { page, pageSize } = params;
+  console.log("获取订单请求参数:", { page, pageSize });
   try {
     const response = await http({
       method: "POST",
       url: `${baseUrl}/shop/list`,
       data: {
         id: riderId,
-        ...params,
+        page: page,
+        pageSize: pageSize,
       },
       auth: true, // 需要认证
     });
